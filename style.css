@@ -1,0 +1,32 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #d8d8d8;
+}
+
+#gridCanvas {
+    display: block;
+    /* margin: 0px 0px 0px 100px; */
+    background-color: #7afcfc;
+}
+
+#squareCanvas {
+    display: block;
+    /* margin: 100px 0px 0px 300px; */
+    background-color: #a50bff;
+}
+
+#cubeCanvas {
+    margin: 100px 0px 100px 300px;
+    border: 1px solid black;
+}
+
+#cubeCanvas2 {
+    margin: 100px 0px 100px 300px;
+    border: 1px solid black;
+}
