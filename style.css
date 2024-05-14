@@ -11,14 +11,12 @@ body {
 
 #gridCanvas {
     display: block;
-    /* margin: 0px 0px 0px 100px; */
-    background-color: #7afcfc;
+    margin: 0px 0px 0px 100px;
 }
 
 #squareCanvas {
     display: block;
-    /* margin: 100px 0px 0px 300px; */
-    background-color: #a50bff;
+    margin: 100px 0px 50px 300px;
 }
 
 #cubeCanvas {

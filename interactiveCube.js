@@ -1,9 +1,6 @@
-
-
 let canvas = document.getElementById('cubeCanvas');
 let ctx = canvas.getContext('2d');
 
-let angle = 0;
 let vertices = [
     [-1, -1, -1],
     [1, -1, -1],
@@ -14,11 +11,11 @@ let vertices = [
     [1, 1, 1],
     [-1, 1, 1],
     
-    [0.9, -1, 1],
-    [0.9, 1, 1],
+    [0.9, -1, -1],
+    [0.9, 1, -1],
     
-    [0.8, 1, 1],
-    [0.8, -1, 1],
+    [0.8, 1, -1],
+    [0.8, -1, -1],
 ]
 
 // Connect points from the vertices array via their index

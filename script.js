@@ -14,9 +14,10 @@ squareCanvas.height = 51;
 //TODO: Stop the site from scrolling when rotating the cube and putting the cursor on the bottom or top of the site
 //TODO: Plan how the site will look like
 //TODO: Zooming to the interactive cube
-//TODO: Make "layers" and animate transitions between them to showcase the surface areas and cubes
+//TODO: Make "layers" and animate a smooth transitions between them to showcase the surface areas and cubes
 
 function drawSquare() {
+    gridCanvas.style.backgroundColor = '#7afcfc';
     squareCanvasCtx.translate(0.5, 0.5);
 
     squareCanvasCtx.strokeStyle = 'red';
@@ -31,6 +32,7 @@ function drawSquare() {
 }
 
 function drawGrid() {
+    squareCanvas.style.backgroundColor = '#a50bff'
     gridCanvasCtx.translate(0.5, 0.5);
 
     gridCanvasCtx.strokeStyle = 'blue';
@@ -50,5 +52,7 @@ function drawGrid() {
     }
 }
 
-drawSquare();
-drawGrid();
+export function draw() {
+    drawGrid();
+    drawSquare();
+}
