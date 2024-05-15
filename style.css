@@ -1,22 +1,16 @@
-* {
+body, html {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Roboto', sans-serif;
+    height: 100%;
+    width: 100%;
     background-color: #d8d8d8;
 }
 
-#gridCanvas {
+#areaCanvas {
     display: block;
-    margin: 0px 0px 0px 100px;
-}
-
-#squareCanvas {
-    display: block;
-    margin: 100px 0px 50px 300px;
+    margin: 0px 0px 0px 0px;
+    width: 100%;
+    height: 100%;
 }
 
 #cubeCanvas {
