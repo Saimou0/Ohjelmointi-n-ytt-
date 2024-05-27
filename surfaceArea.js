@@ -1,3 +1,5 @@
+import { animation } from "./animation.js";
+
 //! SCHIZO
 //TODO: Make all the text and the "arrows" for all the visualizations
 //TODO: Make a cube of cubes.
@@ -21,6 +23,8 @@ let startY = (areaCanvas.height - totalSize) / 2;
 
 let isAnimating = false;
 
+let animation1 = new animation(areaCanvasCtx, areaCanvas, isAnimating);
+
 let numberOfClicks = 0;
 document.addEventListener('DOMContentLoaded', (event) => {
     areaCanvas.addEventListener('click', () => {
@@ -31,13 +35,19 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 });
 
-let unitSquare = createObject((areaCanvas.width - squareSize) / 2, (areaCanvas.height - squareSize) / 2, squareSize, 'red');
+window.onload = function() {
+    animation1.drawObject(unitSquare);
+    // drawObject(unitSquare);
+    drawBracket(10, 100)
+}
+
+let unitSquare = animation1.createObject((areaCanvas.width - squareSize) / 2, (areaCanvas.height - squareSize) / 2, squareSize, 'red', true);
 // For now the way you initiate the animations
 // TODO: Replace with buttons
 function main(numberOfClicks) {
     switch (numberOfClicks) {
         case 0: 
-            animate(unitSquare, {x: startX + currentCol * squareSize + 0.5, y: startY + currentRow * squareSize + 1}, 1000);
+            animation1.animate(unitSquare, {x: startX + currentCol * squareSize + 0.5, y: startY + currentRow * squareSize + 1}, 1000);
             break;
         case 1:
             animateGrid();
@@ -48,49 +58,14 @@ function main(numberOfClicks) {
     }
 }
 
-// Creates an object with x and y coordinates, size and color
-function createObject(x, y, size, color) {
-    return {x, y, size, color}
-}
-
-// Draws the object on the canvas
-function drawObject(object) {
-    areaCanvasCtx.fillStyle = object.color;
-    areaCanvasCtx.fillRect(object.x, object.y, object.size, object.size);
-}
-
-// Updates the object with the desired changes
-function updateObject(object, changes) {
-    Object.assign(object, changes);
-}
-
-// Animates the object to smoothly transition to the desired changes
-function animate(object, changes, duration) {
-    isAnimating = true;
-    let startState = Object.assign({}, object);
-    let startTime = Date.now();
-
-    function frame() {
-        areaCanvasCtx.clearRect(0, 0, areaCanvas.width, areaCanvas.height);
-        let elapsedTime = Date.now() - startTime;
-        let progress = Math.min(elapsedTime / duration, 1);
-
-        for(let key in changes) {
-            let startValue = startState[key];
-            let endValue = changes[key];
-            object[key] = startValue + (endValue - startValue) * progress;
-        }
-
-        drawObject(object);
-
-        if(progress < 1) {
-            requestAnimationFrame(frame);
-        } else {
-            isAnimating = false;
-        }
-    }
-
-    requestAnimationFrame(frame);
+function drawBracket(x, y, size) {
+    let bracketSize = 600; // adjust as needed
+    areaCanvasCtx.beginPath();
+    areaCanvasCtx.moveTo((areaCanvas.width / 2) + x, (areaCanvas.height / 2) + y);
+    areaCanvasCtx.lineTo((areaCanvas.width / 2) - x, x);
+    // areaCanvasCtx.lineTo((areaCanvas.width / 2) + x, (areaCanvas.height / 2)) + y;
+    // areaCanvasCtx.lineTo((areaCanvas.width / 2) - 100, (areaCanvas.height / 2) + y);
+    areaCanvasCtx.stroke();
 }
 
 // Draws a square at the given coordinates and at the given size
@@ -114,7 +89,7 @@ function animateGrid() {
         currentRow++;
     }
     if (currentRow < numSquares) {
-        setTimeout(() => requestAnimationFrame(animateGrid), 20);
+        setTimeout(() => requestAnimationFrame(animateGrid), 10);
     }
 }
 
