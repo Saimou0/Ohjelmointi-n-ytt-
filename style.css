@@ -1,24 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
 body, html {
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
     background-color: #d8d8d8;
+
+    font-family: 'Inter', sans-serif;
 }
 
 #areaCanvas {
     display: block;
-    margin: 0px 0px 0px 0px;
-    width: 100%;
-    height: 100%;
-}
-
-#cubeCanvas {
-    margin: 100px 0px 100px 300px;
-    border: 1px solid black;
-}
-
-#cubeCanvas2 {
-    margin: 100px 0px 100px 300px;
-    border: 1px solid black;
+    margin: 0px 0px 0px 100px;
+    /* width: 100%; */
+    /* height: 100%; */
 }
