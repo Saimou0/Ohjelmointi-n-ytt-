@@ -1,8 +1,8 @@
 import { objectManagement } from "./animationTools.js";
+import { projection } from "./cube.js";
 
 //! DO NOW
-//TODO: 10cm x 10cm square transformation to a solid color square
-//TODO: Place the 1cm x 1cm square to the side to show scale and transform the 10cm x 10cm square to a 10cm x 10cm x 10cm cube
+//TODO: Transform the 10cm x 10cm square to a 10cm x 10cm x 10cm cube
 
 //! DO NEXT
 //TODO: Make a cube of cubes.
@@ -12,10 +12,6 @@ import { objectManagement } from "./animationTools.js";
 //TODO: Make buttons to control the animations
 //TODO: Make the cubes rotateable
 //TODO: Style the page to look better
-
-//! IF TIME
-//TODO: Make the cylinder and cone
-
 
 //* Make unit square expand to fill the grid and change color, while moving unit centimeter to the side
 
@@ -35,10 +31,15 @@ let startX = (areaCanvas.width - totalSize) / 2;
 let startY = (areaCanvas.height - totalSize) / 2;
 
 let objectManager = new objectManagement(areaCanvasCtx, areaCanvas);
+let projector = new projection(areaCanvasCtx, areaCanvas);
 
-let unitSquare = objectManager.createObject((areaCanvas.width - squareSize) / 2, (areaCanvas.height - squareSize) / 2, squareSize, 'red', true);
-let unitCentimeter = objectManager.createObject(startX + currentCol * squareSize + 0.5, startY + currentRow * squareSize + 1, squareSize, 'red', true);
-let bracketObject = objectManager.createBracket((areaCanvas.width - squareSize) / 2 - 10, (areaCanvas.height - squareSize) / 2, squareSize)
+let unitSquare = objectManager.createObject((areaCanvas.width - squareSize) / 2, (areaCanvas.height - squareSize) / 2, squareSize, 'rgb(255, 0, 0)', true);
+let unitCentimeter = objectManager.createObject(startX + currentCol * squareSize + 0.5, startY + currentRow * squareSize + 1, squareSize, 'rgb(255, 0, 0)', true);
+let bracketObject = objectManager.createBracket((areaCanvas.width - squareSize) / 2 - 10, (areaCanvas.height - squareSize) / 2, squareSize);
+
+const objectList = [unitSquare, unitCentimeter];
+
+objectManager.setObjects(objectList);
 
 let numberOfClicks = 0;
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -77,62 +78,32 @@ function main(numberOfClicks) {
             objectManager.animate(unitSquare, {x: startX + currentCol * squareSize + 0.5, y: startY + currentRow * squareSize + 1}, 1000);
             break;
         case 1:
-            animateGrid();
+            objectManager.animateGrid();
             drawGridScale();
             break;
-        case 3:
-            objectManager.animate(unitSquare, {size: 10 * squareSize, border: false}, 1000);
-            objectManager.animate(unitCentimeter, {x: startX - 100, y: startY}, 1000);
+        case 2:
+            objectManager.addToTheQueue(unitSquare, {size: 10 * squareSize, color: 'rgb(255, 0, 255)'}, 1000);
+            objectManager.addToTheQueue(unitCentimeter, {x: startX - 98, y: startY}, 1000);
+            objectManager.animateAll(numberOfClicks);
 
-            //* MAKE THESE WORK AT THE SAME TIME
+            setTimeout(() => {
+                objectManager.drawObject(unitSquare);
+                objectManager.drawObject(unitCentimeter);
+            }, 1500);
+            break;
+        case 3:
 
             break;
     }
 }
 
-// Draws a square at the given coordinates and at the given size
-function drawSquareAt(x, y) {
-    areaCanvasCtx.beginPath();
-    areaCanvasCtx.rect(startX + x * squareSize + 0.5, startY + y * squareSize + 1, squareSize, squareSize);
-    areaCanvasCtx.stroke();
-}
-
-// Animates a grid by drawing each square one by one
-function animateGrid() {
-    if(currentRow >= numSquares) {
-        return;
-    }
-    drawSquareAt(currentCol, currentRow);
-    currentCol++;
-    if (currentCol >= numSquares) {
-        currentCol = 0;
-        currentRow++;
-    }
-    if (currentRow < numSquares) {
-        setTimeout(() => requestAnimationFrame(animateGrid), 10);
-    }
-}
-
-// Instantly draws a grid
-function drawGrid() {
-    for(let i = 0; i < numSquares; i++) {
-        for(let j = 0; j < numSquares; j++) {
-            drawSquareAt(i, j);
-        }
-    }
-}
-
-let alpha = 1;
-
 function drawGridScale() {
-    alpha = Math.min(alpha + 0.01, 1);
-
     objectManager.updateObject(bracketObject, {x: startX, y: startY - 10, size: 10 * squareSize})
     objectManager.drawObject(bracketObject);
     objectManager.updateObject(bracketObject, {x: startX - 10, y: startY, size: 10 * squareSize, horizontal: false})
     objectManager.drawObject(bracketObject);
     
-    areaCanvasCtx.fillStyle = `rgba(0, 0, 0, ${alpha})`;
+    areaCanvasCtx.fillStyle = `rgba(0, 0, 0)`;
     areaCanvasCtx.font = '20px Inter';
 
     areaCanvasCtx.fillText('10cm', startX + 11 - (squareSize / 2) + (10 * squareSize / 2), startY - 30);
