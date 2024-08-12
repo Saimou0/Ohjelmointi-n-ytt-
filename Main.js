@@ -2,6 +2,7 @@ import { objectManagement } from './animationTools.js';
 import { projection } from './cubeTools.js';
 
 //! DO NEXT
+//TODO: Make the delta time work
 //TODO: Rotate the cube grid then decrease the gap and then draw the 1m scale and animate it like the 10cm cube.
 
 //! DO LATER
@@ -77,7 +78,7 @@ window.onload = function() {
     }
 }
 
-let numberOfClicks = 3;
+let numberOfClicks = 2;
 let isAnimating = false;
 document.addEventListener('DOMContentLoaded', (event) => {
     let forwardButton = document.getElementById('forwardButton');
