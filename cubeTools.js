@@ -141,12 +141,14 @@ export class projection {
     }
 
     animateCube(cube, changes) {
-        this.isAnimating = true;
-        
         const startTime = performance.now();
         let duration = 2000;
+        const fixedTimeStamp = 16.67;
+        let accumulatedTime = 0;
+
         let progress = 0;
-        let lastTime = 0;
+        // do not change last time to 0, because current time will be like 6k when the animation starts if you leave the browser for to idle for a while
+        let lastTime = performance.now();
 
         let startValue;
         let endValue;
@@ -157,75 +159,85 @@ export class projection {
 
             const currentTime = performance.now();
             let deltaTime = currentTime - lastTime;
-            progress = deltaTime / duration;
+            lastTime = currentTime;
 
-            //Debugging
-            console.log("%cStartTime: %s", "color: yellow", startTime);
-            console.log("%cCurrentTime: %s", "color: yellow", currentTime);
-            console.log("%cProgress: %s", "color: green", progress);
-            
-            if(progress >= 1) {
-                this.isAnimating = false;
+            accumulatedTime += deltaTime;
+
+            while (accumulatedTime >= fixedTimeStamp) {
+                progress += fixedTimeStamp / duration;
+                accumulatedTime -= fixedTimeStamp;
+
+                //Debugging
+                console.log("%cStartTime: %s", "color: yellow", startTime);
+                console.log("%cCurrentTime: %s", "color: yellow", currentTime);
+                console.log("%cProgress: %s", "color: green", progress);
+                
+                switch (changes.type) {
+                    case 'vertices':
+                        startValue = cube.vertices;
+                        endValue = changes.vertices;
+                        
+                        // Map the new vertices to the cube based on the progress made
+                        cube.vertices = startValue.map((vertex, index) => ({
+                            x: vertex.x + (endValue[index].x - vertex.x) * progress,
+                            y: vertex.y + (endValue[index].y - vertex.y) * progress,
+                            z: vertex.z + (endValue[index].z - vertex.z) * progress
+                        }));
+    
+                        let endFov = changes.fov;
+                        let endViewDistance = changes.viewDistance;
+    
+                        // Increase the field of view and view distance 
+                        this.changeFov(endFov);
+                        this.changeViewDistance(endViewDistance);
+                        break;
+                    case 'rotateX':
+                        startValue = cube.vertices;
+                        // Calculate the end value of the vertices after rotating the cube around the x-axis
+                        endValue = this.rotateXAxis(cube, changes.angle);
+                        // Map the new vertices to the cube based on the progress made
+                        cube.vertices = startValue.map((vertex, index) => ({
+                            x: vertex.x + (endValue[index].x - vertex.x) * progress,
+                            y: vertex.y + (endValue[index].y - vertex.y) * progress,
+                            z: vertex.z + (endValue[index].z - vertex.z) * progress
+                        }));
+                        break;
+                    case 'rotateY':
+                        startValue = cube.vertices;
+                        // Calculate the end value of the vertices after rotating the cube around the y-axis
+                        endValue = this.rotateYAxis(cube, changes.angle);
+                        // Map the new vertices to the cube based on the progress made
+                        cube.vertices = startValue.map((vertex, index) => ({
+                            x: vertex.x + (endValue[index].x - vertex.x) * progress,
+                            y: vertex.y + (endValue[index].y - vertex.y) * progress,
+                            z: vertex.z + (endValue[index].z - vertex.z) * progress
+                        }));
+                        break;
+                }
+                
+                console.log("DT: " + deltaTime);
+                
+                if(progress >= 1) {
+                    this.isAnimating = false;
+                    return;
+                }
+                
             }
 
-            // Check the type of animation to be performed
-            switch (changes.type) {
-                case 'vertices':
-                    startValue = cube.vertices;
-                    endValue = changes.vertices;
-                    
-                    // Map the new vertices to the cube based on the progress made
-                    cube.vertices = startValue.map((vertex, index) => ({
-                        x: vertex.x + (endValue[index].x - vertex.x) * progress,
-                        y: vertex.y + (endValue[index].y - vertex.y) * progress,
-                        z: vertex.z + (endValue[index].z - vertex.z) * progress
-                    }));
-
-                    let endFov = changes.fov;
-                    let endViewDistance = changes.viewDistance;
-
-                    // Increase the field of view and view distance 
-                    this.changeFov(endFov);
-                    this.changeViewDistance(endViewDistance);
-                    break;
-                case 'rotateX':
-                    startValue = cube.vertices;
-                    // Calculate the end value of the vertices after rotating the cube around the x-axis
-                    endValue = this.rotateXAxis(cube, changes.angle);
-                    // Map the new vertices to the cube based on the progress made
-                    cube.vertices = startValue.map((vertex, index) => ({
-                        x: vertex.x + (endValue[index].x - vertex.x) * deltaTime / 60,
-                        y: vertex.y + (endValue[index].y - vertex.y) * deltaTime / 60,
-                        z: vertex.z + (endValue[index].z - vertex.z) * deltaTime / 60
-                    }));
-                    break;
-                case 'rotateY':
-                    startValue = cube.vertices;
-                    // Calculate the end value of the vertices after rotating the cube around the y-axis
-                    endValue = this.rotateYAxis(cube, changes.angle);
-                    // Map the new vertices to the cube based on the progress made
-                    cube.vertices = startValue.map((vertex, index) => ({
-                        x: vertex.x + (endValue[index].x - vertex.x) * deltaTime /  60,
-                        y: vertex.y + (endValue[index].y - vertex.y) * deltaTime /  60,
-                        z: vertex.z + (endValue[index].z - vertex.z) * deltaTime /  60
-                    }));
-                    break;
-            }
+            console.log("%cCube Vertices: %s", "color: orange", cube.vertices.map(vertex => vertex.x));
 
             // Update the cube faces and render the cube
             this.updateCubeFaces(cube);
             this.renderCube(cube);
-
-            lastTime = currentTime;
-
-            console.log("DT: " + deltaTime);
-            // Continue the animation if the progress is less than 1
-            if(progress < 1) {
+            
+            if(this.isAnimating) {
                 requestAnimationFrame(frame);
             }
+            
         }
 
-        frame();
+        this.isAnimating = true;
+        requestAnimationFrame(frame);
     }
 
     createCubeGrid(cube) {

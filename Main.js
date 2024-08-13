@@ -3,7 +3,9 @@ import { projection } from './cubeTools.js';
 
 //! DO NEXT
 //TODO: Make the delta time work
+//TODO: if you leave the browser window for too long the dt will be ridiculously high and the animation won't work
 //TODO: Rotate the cube grid then decrease the gap and then draw the 1m scale and animate it like the 10cm cube.
+//TODO: if the cube is rendered outside the while loop the animation works, but the cube will dissapear at the end of the animation
 
 //! DO LATER
 //TODO: Make the end state of each animation part and link it to the back button.
