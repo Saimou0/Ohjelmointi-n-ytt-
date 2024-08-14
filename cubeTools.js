@@ -13,7 +13,7 @@ export class projection {
         this.viewDistance = 3;
         this.originalViewDistance = 3;
 
-        this.gap = 0.15;
+        this.gap = 0.07;
 
         this.shouldAnimate = false;
     }
@@ -125,29 +125,29 @@ export class projection {
     }
 
     // Increasing the field of view
-    changeFov(value) {
-        if(this.fov < value) {
-            this.fov += 0.09;
-            requestAnimationFrame(this.changeFov.bind(this, value));
-        }
+    changeFov(value, progress, deltaTime) {
+        this.fov = this.originalFov + (value - this.originalFov) * progress;
+        // if(this.fov < value) {
+        //     this.fov += 0.09;
+        //     requestAnimationFrame(this.changeFov.bind(this, value));
+        // }
     }
 
     // Increasing the view distance
-    changeViewDistance(value) {
-        if(this.viewDistance < value) {
-            this.viewDistance += 0.009;
-            requestAnimationFrame(this.changeViewDistance.bind(this, value));
-        }
+    changeViewDistance(value, progress, deltaTime) {
+        this.viewDistance = this.originalViewDistance + (value - this.originalViewDistance) * progress;
+        // if(this.viewDistance < value) {
+        //     this.viewDistance += 0.009;
+        //     requestAnimationFrame(this.changeViewDistance.bind(this, value));
+        // }
     }
 
-    animateCube(cube, changes) {
+    animateCube(cube, changes, duration) {
         const startTime = performance.now();
-        let duration = 2000;
-        const fixedTimeStamp = 16.67;
+        const fixedTimeStamp = 6.06;
         let accumulatedTime = 0;
 
         let progress = 0;
-        // do not change last time to 0, because current time will be like 6k when the animation starts if you leave the browser for to idle for a while
         let lastTime = performance.now();
 
         let startValue;
@@ -168,12 +168,21 @@ export class projection {
                 accumulatedTime -= fixedTimeStamp;
 
                 //Debugging
-                console.log("%cStartTime: %s", "color: yellow", startTime);
-                console.log("%cCurrentTime: %s", "color: yellow", currentTime);
-                console.log("%cProgress: %s", "color: green", progress);
+                // console.log("%cStartTime: %s", "color: yellow", startTime);
+                // console.log("%cCurrentTime: %s", "color: yellow", currentTime);
+                // console.log("%cProgress: %s", "color: green", progress);
+                // console.log("%cFov: %s", "color: magenta", this.fov);
+                // console.log("%cViewDistance: %s", "color: magenta", this.viewDistance);
                 
                 switch (changes.type) {
                     case 'vertices':
+                        let endFov = changes.fov ;
+                        let endViewDistance = changes.viewDistance;
+    
+                        // Increase the field of view and view distance 
+                        this.changeFov(endFov, progress, deltaTime);
+                        this.changeViewDistance(endViewDistance, progress, deltaTime);
+
                         startValue = cube.vertices;
                         endValue = changes.vertices;
                         
@@ -183,13 +192,6 @@ export class projection {
                             y: vertex.y + (endValue[index].y - vertex.y) * progress,
                             z: vertex.z + (endValue[index].z - vertex.z) * progress
                         }));
-    
-                        let endFov = changes.fov;
-                        let endViewDistance = changes.viewDistance;
-    
-                        // Increase the field of view and view distance 
-                        this.changeFov(endFov);
-                        this.changeViewDistance(endViewDistance);
                         break;
                     case 'rotateX':
                         startValue = cube.vertices;
@@ -214,8 +216,11 @@ export class projection {
                         }));
                         break;
                 }
-                
-                console.log("DT: " + deltaTime);
+
+                this.updateCubeFaces(cube);
+                this.renderCube(cube);
+
+                // console.log("DT: " + deltaTime);
                 
                 if(progress >= 1) {
                     this.isAnimating = false;
@@ -225,11 +230,7 @@ export class projection {
             }
 
             console.log("%cCube Vertices: %s", "color: orange", cube.vertices.map(vertex => vertex.x));
-
-            // Update the cube faces and render the cube
-            this.updateCubeFaces(cube);
-            this.renderCube(cube);
-            
+    
             if(this.isAnimating) {
                 requestAnimationFrame(frame);
             }
@@ -238,6 +239,7 @@ export class projection {
 
         this.isAnimating = true;
         requestAnimationFrame(frame);
+        
     }
 
     createCubeGrid(cube) {
@@ -266,15 +268,17 @@ export class projection {
     }
 
     animateCubeGrid() {
-        let allFaces = this.collectAllFaces();
-        let sortedFaces = this.sortFacesByDepth(allFaces);
+        // let allFaces = this.collectAllFaces();
+        let sortedFaces = this.sortFacesByDepth(this.collectAllFaces());
         this.renderSortedFaces(sortedFaces);
 
         // setTimeout(() => {
         //     this.decreaseGap();
         // }, 1000);
 
-        // this.rotateCubeGrid(0.05, 2000);
+        this.rotateCubeGrid(0.005, 2000);
+        // setTimeout(() => {
+        // }, 2000);
     }
 
     // Calculate the depth of a face
@@ -334,7 +338,7 @@ export class projection {
             let sortedFaces = this.sortFacesByDepth(allFaces);
             this.renderSortedFaces(sortedFaces);
 
-            if(this.gap > 0.09) {
+            if(this.gap > 0.07) {
                 requestAnimationFrame(frame);
             }
 
@@ -367,66 +371,70 @@ export class projection {
     }
 
     rotateCubeGrid(wantedAngle, duration) {
-        this.isAnimating = true;
-        let progress = 0;
-        const startTime = Date.now();
+        const startTime = performance.now();
+        const fixedTimeStamp = 6.06;
+        let accumulatedTime = 0;
 
-        const center = this.calculateGridCenter();
-        const angle = wantedAngle; // 1.57 is exactly 90 degrees
+        let lastTime = performance.now();
+        let progress = 0;
+
+        const gridCenter = this.calculateGridCenter();
+        const angle = wantedAngle; // 1.57 was exactly 90 degrees
 
         const frame = () => {
-            const currentTime = Date.now();
-            progress = (currentTime - startTime) / duration;
-            console.log(progress);
+            const currentTime = performance.now();
+            let deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            accumulatedTime += deltaTime;
 
-            if(progress >= 1) {
-                progress = 1;
-                this.isAnimating = false;
-            }
+            console.log("%cStartTime: %s", "color: yellow", startTime);
+            console.log("%cCurrentTime: %s", "color: yellow", currentTime);
+            console.log("%cProgress: %s", "color: green", progress);
 
-            // Make the center of the grid the origin of all the cubes in the grid
-            this.cubes.forEach(cube => {
-                cube.vertices.forEach(vertex => {
-                    vertex.x -= center.x;
-                    vertex.y -= center.y;
-                    vertex.z -= center.z;
-                });
-            });
+            while (accumulatedTime >= fixedTimeStamp) {    
+                progress += fixedTimeStamp / duration;
+                accumulatedTime -= fixedTimeStamp;
+                
+                this.cubes.forEach(cube => {
+                    cube.vertices.forEach(vertex => {
+                        // Make the center of the grid the origin of all the cubes in the grid.
+                        vertex.x -= gridCenter.x;
+                        vertex.y -= gridCenter.y;
+                        vertex.z -= gridCenter.z;
 
-            this.cubes.forEach(cube => {
-                cube.vertices.forEach(vertex => {
-                    const x = vertex.x;
-                    const z = vertex.z;
-                    vertex.x = x * Math.cos(angle * progress) - z * Math.sin(angle * progress);
-                    vertex.z = x * Math.sin(angle * progress) + z * Math.cos(angle * progress);
+                        // Change the vertices of all the cubes in the grid.
+                        const x = vertex.x;
+                        const z = vertex.z;
+                        vertex.x = x * Math.cos(angle * progress) - z * Math.sin(angle * progress);
+                        vertex.z = x * Math.sin(angle * progress) + z * Math.cos(angle * progress);
+
+                        // Return the center of the cube back to it's original place.
+                        vertex.x += gridCenter.x;
+                        vertex.y += gridCenter.y;
+                        vertex.z += gridCenter.z;
+                    });
                 });
                 
-            });
+                // Render the cubes
+                let allFaces = this.collectAllFaces();
+                let sortedFaces = this.sortFacesByDepth(allFaces);
+                this.renderSortedFaces(sortedFaces);
 
-            // Move the all the cubes back to their original position with the rotation applied
-            this.cubes.forEach(cube => {
-                cube.vertices.forEach(vertex => {
-                    vertex.x += center.x;
-                    vertex.y += center.y;
-                    vertex.z += center.z;
-                });
-            });
-            
-            // Render the cubes
-            let allFaces = this.collectAllFaces();
-            let sortedFaces = this.sortFacesByDepth(allFaces);
-            this.renderSortedFaces(sortedFaces);
+                console.log("DT: " + deltaTime); 
 
-            console.log("Animating");
-
-            if(progress < 1) {
-                requestAnimationFrame(frame);
-            } else {
-                this.isAnimating = false;
+                if(progress >= 1) {
+                    this.isAnimating = false;
+                    return;
+                }
             }
 
+            if(this.isAnimating) {
+                requestAnimationFrame(frame);
+            }
+            
         }
-        frame();
+        this.isAnimating = true;
+        requestAnimationFrame(frame);
     }
 
     checkAnimationStatus() {

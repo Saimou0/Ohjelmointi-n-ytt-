@@ -2,10 +2,8 @@ import { objectManagement } from './animationTools.js';
 import { projection } from './cubeTools.js';
 
 //! DO NEXT
-//TODO: Make the delta time work
-//TODO: if you leave the browser window for too long the dt will be ridiculously high and the animation won't work
+//TODO: Make the delta time work for the grid
 //TODO: Rotate the cube grid then decrease the gap and then draw the 1m scale and animate it like the 10cm cube.
-//TODO: if the cube is rendered outside the while loop the animation works, but the cube will dissapear at the end of the animation
 
 //! DO LATER
 //TODO: Make the end state of each animation part and link it to the back button.
@@ -80,7 +78,7 @@ window.onload = function() {
     }
 }
 
-let numberOfClicks = 2;
+let numberOfClicks = 3;
 let isAnimating = false;
 document.addEventListener('DOMContentLoaded', (event) => {
     let forwardButton = document.getElementById('forwardButton');
@@ -177,7 +175,7 @@ function main(numberOfClicks) {
             case 3:
                 // Increasing the distance between the cube and the camera and changing the cube's location
                 startAnimationSequence([
-                    () => projector.animateCube(centimeterCube, {type: 'vertices', fov: 1000, viewDistance: 20, vertices: changeLocationVertices1}, 1000),
+                    () => projector.animateCube(centimeterCube, {type: 'vertices', fov: 1000, viewDistance: 20, vertices: changeLocationVertices1}, 2000),
                 ]).then(resolve);
                 break;
             case 4:
@@ -197,6 +195,7 @@ function animationEndStates() {
     return new Promise((resolve) => {
         switch (numberOfClicks) {
             case 0:
+                // Reset button
                 startAnimationSequence([
                     () => areaCanvasCtx.clearRect(0, 0, areaCanvas.width, areaCanvas.height),
                     () => objectManager.updateObject(unitSquare, {x: (canvasSquareWidth) / 2, y: (canvasSquareHeight) / 2, color: 'rgb(255, 0, 0)', size: squareSize}, true),
