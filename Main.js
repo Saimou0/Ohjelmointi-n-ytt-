@@ -50,17 +50,29 @@ const cubeEdges = [
 ];
 
 const changeLocationVertices1 = [
-    {x: -6, y: -6, z: -6}, // Vertex 0
-    {x: -5, y: -6, z: -6}, // Vertex 1
-    {x: -5, y: -5, z: -6}, // Vertex 2
-    {x: -6, y: -5, z: -6}, // Vertex 3
-    {x: -6, y: -6, z: -5}, // Vertex 4
-    {x: -5, y: -6, z: -5}, // Vertex 5
-    {x: -5, y: -5, z: -5}, // Vertex 6
-    {x: -6, y: -5, z: -5}  // Vertex 7
+    {x: -5.2, y: -5.2, z: -5.2}, // Vertex 0
+    {x: -4.2, y: -5.2, z: -5.2}, // Vertex 1
+    {x: -4.2, y: -4.2, z: -5.2}, // Vertex 2
+    {x: -5.2, y: -4.2, z: -5.2}, // Vertex 3
+    {x: -5.2, y: -5.2, z: -4.2}, // Vertex 4
+    {x: -4.2, y: -5.2, z: -4.2}, // Vertex 5
+    {x: -4.2, y: -4.2, z: -4.2}, // Vertex 6
+    {x: -5.2, y: -4.2, z: -4.2}  // Vertex 7
 ];
 
+// const changeLocationVertices1 = [
+//     {x: -6, y: -6, z: -6}, // Vertex 0
+//     {x: -5, y: -6, z: -6}, // Vertex 1
+//     {x: -5, y: -5, z: -6}, // Vertex 2
+//     {x: -6, y: -5, z: -6}, // Vertex 3
+//     {x: -6, y: -6, z: -5}, // Vertex 4
+//     {x: -5, y: -6, z: -5}, // Vertex 5
+//     {x: -5, y: -5, z: -5}, // Vertex 6
+//     {x: -6, y: -5, z: -5}  // Vertex 7
+// ];
+
 let centimeterCube = projector.createCubeObject(cubeVertices, cubeEdges);
+
 
 window.onload = function() {
     objectManager.drawObject(unitSquare);
@@ -175,13 +187,15 @@ function main(numberOfClicks) {
             case 3:
                 // Increasing the distance between the cube and the camera and changing the cube's location
                 startAnimationSequence([
-                    () => projector.animateCube(centimeterCube, {type: 'vertices', fov: 1000, viewDistance: 20, vertices: changeLocationVertices1}, 2000),
+                    () => projector.animateCube(centimeterCube, {type: 'vertices', fov: 1000, viewDistance: 20, vertices: changeLocationVertices1}, 1000),
                 ]).then(resolve);
                 break;
             case 4:
                 startAnimationSequence([
                     () => projector.createCubeGrid(centimeterCube),
-                    () => projector.animateCubeGrid()
+                    () => projector.animateCubeGrid(),
+                    () => new Promise(resolve => setTimeout(resolve, 1500)),
+                    () => drawGridScale()
                 ]).then(resolve);
                 break;
             case 5:

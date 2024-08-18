@@ -143,7 +143,6 @@ export class projection {
     }
 
     animateCube(cube, changes, duration) {
-        const startTime = performance.now();
         const fixedTimeStamp = 6.06;
         let accumulatedTime = 0;
 
@@ -268,17 +267,17 @@ export class projection {
     }
 
     animateCubeGrid() {
-        // let allFaces = this.collectAllFaces();
-        let sortedFaces = this.sortFacesByDepth(this.collectAllFaces());
+        let allFaces = this.collectAllFaces();
+        let sortedFaces = this.sortFacesByDepth(allFaces);
         this.renderSortedFaces(sortedFaces);
 
-        // setTimeout(() => {
-        //     this.decreaseGap();
-        // }, 1000);
+        this.rotateCubeGrid(0.0186, 1000);
 
-        this.rotateCubeGrid(0.005, 2000);
-        // setTimeout(() => {
-        // }, 2000);
+        //TODO: gap decrease doesn't work if the cube grid is rotated
+
+        setTimeout(() => {
+            this.decreaseGap();
+        }, 1200);
     }
 
     // Calculate the depth of a face

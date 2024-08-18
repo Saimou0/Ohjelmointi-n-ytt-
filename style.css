@@ -19,6 +19,11 @@ body, html {
     display: block;
     border: 1px solid black;
     margin-top: 100px;
+
+    width: 100%;
+    height: 100%;
+    max-width: 900px;
+    max-height: 900px;
 }
 
 .controls {
