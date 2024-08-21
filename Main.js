@@ -2,15 +2,15 @@ import { objectManagement } from './animationTools.js';
 import { projection } from './cubeTools.js';
 
 //! DO NEXT
-//TODO: Make the delta time work for the grid
-//TODO: Rotate the cube grid then decrease the gap and then draw the 1m scale and animate it like the 10cm cube.
+//TODO: Make the delta time work for the grid - Maybe done? needs to be tested at home.
+//TODO: Make the gap decrease work and make the animation sequence for the rest of the cube grid.
+//TODO: Optimize the cube grid rotation. Use web workers or find something else.
 
 //! DO LATER
 //TODO: Make the end state of each animation part and link it to the back button.
 
 //! FINISHING TOUCHES
 //TODO: Make buttons look better
-//TODO: Overall making the site work better
 
 let areaCanvas = document.getElementById('areaCanvas');
 let areaCanvasCtx = areaCanvas.getContext('2d');
@@ -90,7 +90,7 @@ window.onload = function() {
     }
 }
 
-let numberOfClicks = 3;
+let numberOfClicks = 5;
 let isAnimating = false;
 document.addEventListener('DOMContentLoaded', (event) => {
     let forwardButton = document.getElementById('forwardButton');
@@ -165,41 +165,74 @@ function main(numberOfClicks) {
             case 2:
                 // Rotating to first show the right side and then the top of the 10cm cube
                 startAnimationSequence([
+                    // Rotating to show the right side of the cube
                     () => projector.animateCube(centimeterCube, {type: 'rotateX', angle: 0.01} , 1900),
                     () => new Promise(resolve => setTimeout(resolve, 2050)),
                     () => drawGridScale(),
-                    () => new Promise(resolve => setTimeout(resolve, 1000)),
+                    // () => new Promise(resolve => setTimeout(resolve, 1000)),
+
+                    // Rotating to show the top of the cube
+                    // () => projector.animateCube(centimeterCube, {type: 'rotateY', angle: 0.0094} , 2000),
+                    // () => new Promise(resolve => setTimeout(resolve, 2050)),
+                    // () => drawGridScale(),
+
+                    // Resetting to the front face of the cube
+                    // () => new Promise(resolve => setTimeout(resolve, 1000)),
+                    // () => projector.animateCube(centimeterCube, {type: 'rotateX', angle: -0.0095} , 2000),
+                    // () => new Promise(resolve => setTimeout(resolve, 2100)),
+
+                    // Resetting the cube's vertices to the original position
+                    // () => projector.updateCube(centimeterCube, {vertices: cubeVertices.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    // () => projector.updateCubeFaces(centimeterCube),
+                    // () => projector.renderCube(centimeterCube),
+                ]).then(resolve);
+                break;
+            case 3:
+                startAnimationSequence([
+                    // Rotating to show the top of the cube
                     () => projector.animateCube(centimeterCube, {type: 'rotateY', angle: 0.0094} , 2000),
                     () => new Promise(resolve => setTimeout(resolve, 2050)),
                     () => drawGridScale(),
-
+                ]).then(resolve);
+                break;
+            case 4:
+                startAnimationSequence([
                     // Resetting to the front face of the cube
-                    () => new Promise(resolve => setTimeout(resolve, 1000)),
                     () => projector.animateCube(centimeterCube, {type: 'rotateX', angle: -0.0095} , 2000),
                     () => new Promise(resolve => setTimeout(resolve, 2100)),
-
+                    
                     // Resetting the cube's vertices to the original position
                     () => projector.updateCube(centimeterCube, {vertices: cubeVertices.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                     () => projector.updateCubeFaces(centimeterCube),
                     () => projector.renderCube(centimeterCube),
                 ]).then(resolve);
                 break;
-            case 3:
+            case 5:
                 // Increasing the distance between the cube and the camera and changing the cube's location
                 startAnimationSequence([
                     () => projector.animateCube(centimeterCube, {type: 'vertices', fov: 1000, viewDistance: 20, vertices: changeLocationVertices1}, 1000),
                 ]).then(resolve);
                 break;
-            case 4:
+            case 6:
                 startAnimationSequence([
+                    // Creating a grid
                     () => projector.createCubeGrid(centimeterCube),
-                    () => projector.animateCubeGrid(),
+
+                    // Rotating the cube grid to show the right side
+                    () => projector.rotateCubeGrid(0.0095, 1000, "x"),
                     () => new Promise(resolve => setTimeout(resolve, 1500)),
-                    () => drawGridScale()
+                    () => drawMeterScale(),
+                    
                 ]).then(resolve);
                 break;
-            case 5:
-                // projector.runProjector("fillCubeGrid");
+            case 7:
+                startAnimationSequence([
+                    // Rotating the cube grid to show the bottom
+                    () => projector.rotateCubeGrid(0.0094, 1000, "y"),
+                    () => new Promise(resolve => setTimeout(resolve, 1000)),
+                    () => drawMeterScale(),
+                ]).then(resolve);
+                break;
         }
     });
 
@@ -254,4 +287,17 @@ function drawGridScale() {
 
     areaCanvasCtx.fillText('10cm', startX + 11 - (squareSize / 2) + (10 * squareSize / 2), startY - 30);
     areaCanvasCtx.fillText('10cm', startX - 80, startY + (10 * squareSize / 2));
+}
+
+function drawMeterScale() {
+    objectManager.updateObject(bracketObject, {x: startX, y: startY - 10, size: 10 * squareSize, horizontal: true})
+    objectManager.drawObject(bracketObject);
+    objectManager.updateObject(bracketObject, {x: startX - 10, y: startY, size: 10 * squareSize, horizontal: false})
+    objectManager.drawObject(bracketObject);
+
+    areaCanvasCtx.fillStyle = `rgba(0, 0, 0)`;
+    areaCanvasCtx.font = '20px Inter';
+
+    areaCanvasCtx.fillText('1m', startX + 11 - (squareSize / 2) + (10 * squareSize / 2), startY - 30);
+    areaCanvasCtx.fillText('1m', startX - 80, startY + (10 * squareSize / 2));
 }

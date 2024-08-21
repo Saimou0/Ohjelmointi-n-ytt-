@@ -125,21 +125,13 @@ export class projection {
     }
 
     // Increasing the field of view
-    changeFov(value, progress, deltaTime) {
+    changeFov(value, progress) {
         this.fov = this.originalFov + (value - this.originalFov) * progress;
-        // if(this.fov < value) {
-        //     this.fov += 0.09;
-        //     requestAnimationFrame(this.changeFov.bind(this, value));
-        // }
     }
 
     // Increasing the view distance
-    changeViewDistance(value, progress, deltaTime) {
+    changeViewDistance(value, progress) {
         this.viewDistance = this.originalViewDistance + (value - this.originalViewDistance) * progress;
-        // if(this.viewDistance < value) {
-        //     this.viewDistance += 0.009;
-        //     requestAnimationFrame(this.changeViewDistance.bind(this, value));
-        // }
     }
 
     animateCube(cube, changes, duration) {
@@ -225,20 +217,16 @@ export class projection {
                     this.isAnimating = false;
                     return;
                 }
-                
             }
 
-            console.log("%cCube Vertices: %s", "color: orange", cube.vertices.map(vertex => vertex.x));
+            // console.log("%cCube Vertices: %s", "color: orange", cube.vertices.map(vertex => vertex.x));
     
             if(this.isAnimating) {
                 requestAnimationFrame(frame);
             }
-            
         }
-
         this.isAnimating = true;
         requestAnimationFrame(frame);
-        
     }
 
     createCubeGrid(cube) {
@@ -271,13 +259,34 @@ export class projection {
         let sortedFaces = this.sortFacesByDepth(allFaces);
         this.renderSortedFaces(sortedFaces);
 
-        this.rotateCubeGrid(0.0186, 1000);
+        // Normal
+        // this.rotateCubeGrid(0.0186, 1000);
 
-        //TODO: gap decrease doesn't work if the cube grid is rotated
+        // Pre calculated cos and sin
+        this.rotateCubeGrid(0.0094, 1000, "x");
+        
+        setTimeout(() => {
+            this.rotateCubeGrid(0.0094, 1000, "y");
+        }, 2000);
 
         setTimeout(() => {
-            this.decreaseGap();
-        }, 1200);
+            this.rotateCubeGrid(-0.0094, 1000, "x");
+        }, 4000)
+
+        // The animations end at showing 3 sides of the cube grid
+        setTimeout(() => {
+            this.rotateCubeGrid(0.0094, 1000, "z");
+        },6000);
+
+        setTimeout(() => {
+            // this.rotateCubeGrid(0.0094, 1000);
+            this.cubes.splice(1, this.cubes.length - 1);
+            this.createCubeGrid(this.cubes[0]);
+
+            let allFaces = this.collectAllFaces();
+            let sortedFaces = this.sortFacesByDepth(allFaces);
+            this.renderSortedFaces(sortedFaces);
+        }, 8000);
     }
 
     // Calculate the depth of a face
@@ -326,9 +335,12 @@ export class projection {
     }
 
     decreaseGap() {
+        //TODO: gap decrease doesn't work if the cube grid is rotated, 
+        //TODO: probably because it creates a new grid
+
         const frame = () => {
             this.gap -= 0.01;
-        
+            
             this.cubes.splice(1, this.cubes.length - 1);
 
             this.createCubeGrid(this.cubes[0]);
@@ -337,10 +349,9 @@ export class projection {
             let sortedFaces = this.sortFacesByDepth(allFaces);
             this.renderSortedFaces(sortedFaces);
 
-            if(this.gap > 0.07) {
+            if(this.gap > 0.02) {
                 requestAnimationFrame(frame);
             }
-
         };
 
         frame();
@@ -365,20 +376,64 @@ export class projection {
         center.x /= totalVertices;
         center.y /= totalVertices;
         center.z /= totalVertices;
-    
         return center;
     }
 
-    rotateCubeGrid(wantedAngle, duration) {
-        const startTime = performance.now();
+    rotateCubeGrid(wantedAngle, duration, axis) {
         const fixedTimeStamp = 6.06;
         let accumulatedTime = 0;
-
         let lastTime = performance.now();
         let progress = 0;
 
         const gridCenter = this.calculateGridCenter();
         const angle = wantedAngle; // 1.57 was exactly 90 degrees
+        const rotationMatrix = this.getRotationMatrix(angle, axis);
+
+        // Worker variables
+        const numWorkers = 2;
+        const chunkSize = Math.ceil(this.cubes.length / numWorkers);
+        const workers = [];
+        let completedWorkers = 0;
+        let combinedCubes = [];
+
+        // const cosAngle = Math.cos(angle);
+        // const sinAngle = Math.sin(angle);
+
+        for(let i = 0; i < numWorkers; i++) {
+            const worker = new Worker('worker.js');
+            workers.push(worker);
+
+            worker.onmessage = (event) => {
+                combinedCubes = combinedCubes.concat(event.data);
+                completedWorkers++;
+
+                if(completedWorkers === numWorkers) {
+                    this.cubes = combinedCubes;
+
+                    let allFaces = this.collectAllFaces();
+                    let sortedFaces = this.sortFacesByDepth(allFaces);
+                    this.renderSortedFaces(sortedFaces);
+
+                    if(progress >= 1) {
+                        this.isAnimating = false;
+                        return;
+                    }
+
+                    combinedCubes = [];
+                    completedWorkers = 0;
+                }
+            }
+
+            worker.onerror = (error) => {
+                console.error('Worker error: + ${error.message}');
+                worker.terminate();
+                completedWorkers++;
+
+                if(completedWorkers === numWorkers) {
+                    this.isAnimating = false;
+                }
+            }
+        }
 
         const frame = () => {
             const currentTime = performance.now();
@@ -386,54 +441,118 @@ export class projection {
             lastTime = currentTime;
             accumulatedTime += deltaTime;
 
-            console.log("%cStartTime: %s", "color: yellow", startTime);
-            console.log("%cCurrentTime: %s", "color: yellow", currentTime);
-            console.log("%cProgress: %s", "color: green", progress);
+            // console.log("%cStartTime: %s", "color: yellow", startTime);
+            // console.log("%cCurrentTime: %s", "color: yellow", currentTime);
+            // console.log("%cProgress: %s", "color: green", progress);
 
             while (accumulatedTime >= fixedTimeStamp) {    
                 progress += fixedTimeStamp / duration;
                 accumulatedTime -= fixedTimeStamp;
-                
-                this.cubes.forEach(cube => {
-                    cube.vertices.forEach(vertex => {
-                        // Make the center of the grid the origin of all the cubes in the grid.
-                        vertex.x -= gridCenter.x;
-                        vertex.y -= gridCenter.y;
-                        vertex.z -= gridCenter.z;
 
-                        // Change the vertices of all the cubes in the grid.
-                        const x = vertex.x;
-                        const z = vertex.z;
-                        vertex.x = x * Math.cos(angle * progress) - z * Math.sin(angle * progress);
-                        vertex.z = x * Math.sin(angle * progress) + z * Math.cos(angle * progress);
+                for(let i = 0; i < numWorkers; i++) {
+                    const start = i * chunkSize;
+                    const end = start + chunkSize;
+                    const cubeChunk = this.cubes.slice(start, end);
 
-                        // Return the center of the cube back to it's original place.
-                        vertex.x += gridCenter.x;
-                        vertex.y += gridCenter.y;
-                        vertex.z += gridCenter.z;
-                    });
-                });
-                
-                // Render the cubes
-                let allFaces = this.collectAllFaces();
-                let sortedFaces = this.sortFacesByDepth(allFaces);
-                this.renderSortedFaces(sortedFaces);
-
-                console.log("DT: " + deltaTime); 
-
-                if(progress >= 1) {
-                    this.isAnimating = false;
-                    return;
+                    workers[i].postMessage({
+                        cubes: cubeChunk,
+                        gridCenter: gridCenter,
+                        rotationMatrix: rotationMatrix
+                    })
                 }
+
+                // this.cubes.forEach(cube => {
+                //     cube.vertices.forEach(vertex => {
+                //         const translatedVertex = [
+                //             vertex.x - gridCenter.x,
+                //             vertex.y - gridCenter.y,
+                //             vertex.z - gridCenter.z,
+                //             1
+                //         ];
+
+                //         const rotatedVertex = this.transformVector(rotationMatrix, translatedVertex);
+
+                //         vertex.x = rotatedVertex[0] + gridCenter.x;
+                //         vertex.y = rotatedVertex[1] + gridCenter.y;
+                //         vertex.z = rotatedVertex[2] + gridCenter.z;
+                //     });
+                // });
+                
+                // // Render the cubes
+                // let allFaces = this.collectAllFaces();
+                // let sortedFaces = this.sortFacesByDepth(allFaces);
+                // this.renderSortedFaces(sortedFaces);
+
+                // console.log("DT: " + deltaTime); 
+    
+                // if(progress >= 1) {
+                //     this.isAnimating = false;
+                //     return;
+                // }
             }
 
             if(this.isAnimating) {
                 requestAnimationFrame(frame);
             }
-            
-        }
+        };
         this.isAnimating = true;
         requestAnimationFrame(frame);
+    }
+
+    getRotationMatrix(angle, axis) {
+        switch (axis) {
+            case 'x':
+                return this.rotationMatrixX(angle);
+            case 'y':
+                return this.rotationMatrixY(angle);
+            case 'z':
+                return this.rotationMatrixZ(angle);
+            default:
+                console.error('Invalid axis');
+        }
+    }
+
+    transformVector(matrix, vector) {
+        const [x, y, z] = vector;
+
+        return [
+            matrix[0] * x + matrix[4] * y + matrix[8] * z + matrix[12],
+            matrix[1] * x + matrix[5] * y + matrix[9] * z + matrix[13],
+            matrix[2] * x + matrix[6] * y + matrix[10] * z + matrix[14]
+        ];
+    }
+
+    rotationMatrixX(angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        return [
+            cos, 0, sin, 0,
+            0, 1, 0, 0,
+            -sin, 0, cos, 0,
+            0, 0, 0, 1
+        ];
+    }
+
+    rotationMatrixY(angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        return [
+            1, 0, 0, 0,
+            0, cos, -sin, 0,
+            0, sin, cos, 0,
+            0, 0, 0, 1
+        ];
+    }
+
+    rotationMatrixZ(angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        return [
+            cos, -sin, 0, 0,
+            sin, cos, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        ];
     }
 
     checkAnimationStatus() {
