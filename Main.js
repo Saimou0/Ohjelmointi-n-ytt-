@@ -2,9 +2,8 @@ import { objectManagement } from './animationTools.js';
 import { projection } from './cubeTools.js';
 
 //! DO NEXT
-//TODO: Make the delta time work for the grid - Maybe done? needs to be tested at home.
-//TODO: Make the gap decrease work and make the animation sequence for the rest of the cube grid.
-//TODO: Optimize the cube grid rotation. Use web workers or find something else.
+//TODO: Finish the meterCube animation sequence and make the vertices correct
+//TODO: Add an animating sing into the canvas
 
 //! DO LATER
 //TODO: Make the end state of each animation part and link it to the back button.
@@ -43,6 +42,18 @@ const cubeVertices = [
     {x: -1, y: 1, z: 1}    // Vertex 7
 ];
 
+const cubeVertices2 = [
+    {x: -0.95, y: -0.95, z: -0.95}, // Vertex 0
+    {x: 0.95, y: -0.95, z: -0.95},  // Vertex 1
+    {x: 0.95, y: 0.95, z: -0.95},   // Vertex 2
+    {x: -0.95, y: 0.95, z: -0.95},  // Vertex 3
+
+    {x: -0.95, y: -0.95, z: 0.95},  // Vertex 4 back top left when viewed from the front
+    {x: 0.95, y: -0.95, z: 0.95},   // Vertex 5 back top right when viewed from the front
+    {x: 0.95, y: 0.95, z: 0.95},    // Vertex 6 back bottom left when viewed from the front
+    {x: -0.95, y: 0.95, z: 0.95}    // Vertex 7 back bottom right when viewed from the front
+];
+
 const cubeEdges = [
     [0, 1], [1, 2], [2, 3], [3, 0], // Front face
     [4, 5], [5, 6], [6, 7], [7, 4], // Back face
@@ -60,18 +71,8 @@ const changeLocationVertices1 = [
     {x: -5.2, y: -4.2, z: -4.2}  // Vertex 7
 ];
 
-// const changeLocationVertices1 = [
-//     {x: -6, y: -6, z: -6}, // Vertex 0
-//     {x: -5, y: -6, z: -6}, // Vertex 1
-//     {x: -5, y: -5, z: -6}, // Vertex 2
-//     {x: -6, y: -5, z: -6}, // Vertex 3
-//     {x: -6, y: -6, z: -5}, // Vertex 4
-//     {x: -5, y: -6, z: -5}, // Vertex 5
-//     {x: -5, y: -5, z: -5}, // Vertex 6
-//     {x: -6, y: -5, z: -5}  // Vertex 7
-// ];
-
 let centimeterCube = projector.createCubeObject(cubeVertices, cubeEdges);
+let meterCube = projector.createCubeObject(cubeVertices2, cubeEdges);
 
 
 window.onload = function() {
@@ -100,9 +101,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
     areaCanvas.addEventListener('click', () => {
         if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus()) {
             isAnimating = true;
+            animationIndicatorOn();
             main(numberOfClicks).then(() => {
                 numberOfClicks++;
                 isAnimating = false;
+                animationIndicatorOff();
             });
         }
     });
@@ -169,22 +172,6 @@ function main(numberOfClicks) {
                     () => projector.animateCube(centimeterCube, {type: 'rotateX', angle: 0.01} , 1900),
                     () => new Promise(resolve => setTimeout(resolve, 2050)),
                     () => drawGridScale(),
-                    // () => new Promise(resolve => setTimeout(resolve, 1000)),
-
-                    // Rotating to show the top of the cube
-                    // () => projector.animateCube(centimeterCube, {type: 'rotateY', angle: 0.0094} , 2000),
-                    // () => new Promise(resolve => setTimeout(resolve, 2050)),
-                    // () => drawGridScale(),
-
-                    // Resetting to the front face of the cube
-                    // () => new Promise(resolve => setTimeout(resolve, 1000)),
-                    // () => projector.animateCube(centimeterCube, {type: 'rotateX', angle: -0.0095} , 2000),
-                    // () => new Promise(resolve => setTimeout(resolve, 2100)),
-
-                    // Resetting the cube's vertices to the original position
-                    // () => projector.updateCube(centimeterCube, {vertices: cubeVertices.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
-                    // () => projector.updateCubeFaces(centimeterCube),
-                    // () => projector.renderCube(centimeterCube),
                 ]).then(resolve);
                 break;
             case 3:
@@ -215,22 +202,57 @@ function main(numberOfClicks) {
                 break;
             case 6:
                 startAnimationSequence([
-                    // Creating a grid
+                    // Creating a grid and a copy of the grid
                     () => projector.createCubeGrid(centimeterCube),
+                    () => projector.createGridCopy(),
+                    () => projector.drawCubeGrid(),
 
-                    // Rotating the cube grid to show the right side
-                    () => projector.rotateCubeGrid(0.0095, 1000, "x"),
-                    () => new Promise(resolve => setTimeout(resolve, 1500)),
-                    () => drawMeterScale(),
+                    () => new Promise(resolve => setTimeout(resolve, 500)),
                     
+                    // Rotating the cube grid to show the front, right side and the top
+                    () => projector.rotateCubeGrid(0.0046, 1000, "x"),
+                    () => new Promise(resolve => setTimeout(resolve, 1500)),
+                    () => projector.rotateCubeGrid(-0.0046, 1000, "y"),
+                    () => new Promise(resolve => setTimeout(resolve, 1500)),
                 ]).then(resolve);
                 break;
             case 7:
                 startAnimationSequence([
-                    // Rotating the cube grid to show the bottom
-                    () => projector.rotateCubeGrid(0.0094, 1000, "y"),
-                    () => new Promise(resolve => setTimeout(resolve, 1000)),
+                    // Reset the cube grid rotation
+                    () => projector.rotateCubeGrid(0.0046, 1000, "y"),
+                    () => new Promise(resolve => setTimeout(resolve, 1500)),
+                    () => projector.rotateCubeGrid(-0.0046, 1000, "x"),
+                    () => new Promise(resolve => setTimeout(resolve, 1500)),
+                    () => projector.decreaseGap(),
+
+                    () => new Promise(resolve => setTimeout(resolve, 500)),
+
+                    // Render meter cube
+                    () => projector.fov = 750,
+                    () => projector.viewDistance = 3,
+                    () => projector.renderCube(meterCube),
                     () => drawMeterScale(),
+                ]).then(resolve);
+                break;
+            case 8:
+                startAnimationSequence([
+                    () => projector.animateCube(meterCube, {type: 'rotateX', angle: 0.01} , 1900),
+                    () => new Promise(resolve => setTimeout(resolve, 2050)),
+                    () => drawMeterScale(),
+                ]).then(resolve);
+                break;
+            case 9:
+                startAnimationSequence([
+                    () => projector.animateCube(meterCube, {type: 'rotateY', angle: 0.0094} , 2000),
+                    () => new Promise(resolve => setTimeout(resolve, 2100)),
+                    () => drawMeterScale(),
+                ]).then(resolve);
+                break;
+            case 10:
+                startAnimationSequence([
+                    () => projector.animateCube(meterCube, {type: 'rotateX', angle: -0.0095} , 2000),
+                    () => new Promise(resolve => setTimeout(resolve, 2100)),
+                    () => projector.updateCube(meterCube, {vertices: cubeVertices2.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                 ]).then(resolve);
                 break;
         }
@@ -300,4 +322,18 @@ function drawMeterScale() {
 
     areaCanvasCtx.fillText('1m', startX + 11 - (squareSize / 2) + (10 * squareSize / 2), startY - 30);
     areaCanvasCtx.fillText('1m', startX - 80, startY + (10 * squareSize / 2));
+}
+
+function animationIndicatorOn() {
+    let indicator = document.getElementById('animationIndicator');
+    indicator.style.color = 'green';
+
+    indicator.innerHTML = 'Animoi';
+}
+
+function animationIndicatorOff() {
+    let indicator = document.getElementById('animationIndicator');
+    indicator.style.color = 'red';
+
+    indicator.innerHTML = 'Ei animoi';
 }
