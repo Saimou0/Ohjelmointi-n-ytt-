@@ -2,14 +2,7 @@ import { objectManagement } from './animationTools.js';
 import { projection } from './cubeTools.js';
 
 //! DO NEXT
-//TODO: Finish the meterCube animation sequence and make the vertices correct
-//TODO: Add an animating sing into the canvas
-
-//! DO LATER
 //TODO: Make the end state of each animation part and link it to the back button.
-
-//! FINISHING TOUCHES
-//TODO: Make buttons look better
 
 let areaCanvas = document.getElementById('areaCanvas');
 let areaCanvasCtx = areaCanvas.getContext('2d');
@@ -284,6 +277,8 @@ function animationEndStates() {
                     () => projector.updateCube(centimeterCube, {vertices: cubeVertices.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                     () => projector.updateCubeFaces(centimeterCube),
                     () => projector.gap = 0.15,
+                    () => projector.updateCube(meterCube, {vertices: cubeVertices2.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.updateCubeFaces(meterCube),
 
                 ]).then(resolve);
                 break;

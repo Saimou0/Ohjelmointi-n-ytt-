@@ -150,8 +150,7 @@ export class projection {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
             const currentTime = performance.now();
-            let deltaTime = Math.floor(currentTime - lastTime);
-            // let deltaTime = currentTime - lastTime;
+            let deltaTime = currentTime - lastTime;
             lastTime = currentTime;
 
             accumulatedTime += deltaTime;
@@ -213,8 +212,6 @@ export class projection {
                     return;
                 }
             }
-
-            // console.log("%cCube Vertices: %s", "color: orange", cube.vertices.map(vertex => vertex.x));
     
             if(this.isAnimating) {
                 requestAnimationFrame(frame);
@@ -230,15 +227,6 @@ export class projection {
         let gridSize = 10;
 
         let originalVertices = cube.vertices;
-
-        // if(cube == undefined) {
-        //     console.log("using grid copy")
-        //     cubeCopy = this.gridCopy[0];
-        //     originalVertices = cubeCopy.vertices;
-        // } else {
-        //     console.log("using cubes")
-        //     originalVertices = cube.vertices;
-        // }
 
         for(let x = 0; x < gridSize; x++) {
             for(let y = 0; y < gridSize; y++) {
@@ -324,7 +312,6 @@ export class projection {
 
             if(this.gap >= 0.005) {
                 requestAnimationFrame(frame);
-                // console.log("animating gap " + this.gap);
             }
         };
 
@@ -360,7 +347,7 @@ export class projection {
         let progress = 0;
 
         const gridCenter = this.calculateGridCenter();
-        const angle = wantedAngle; // 1.57 was exactly 90 degrees
+        const angle = wantedAngle;
         const rotationMatrix = this.getRotationMatrix(angle, axis);
 
         const frame = () => {
@@ -425,6 +412,7 @@ export class projection {
         }
     }
 
+    // Matrices for rotating the cube grid
     transformVector(matrix, vector) {
         const [x, y, z] = vector;
 
