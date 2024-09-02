@@ -15,10 +15,19 @@ body, html {
     align-items: center;
 }
 
+
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    padding: 10px;
+}
+
 #areaCanvas {
     display: block;
     border: 1px solid black;
-    margin-top: 100px;
 
     width: 100%;
     height: 100%;
@@ -29,25 +38,100 @@ body, html {
 .controls {
     width: 100%;
     margin: 10px 0 10px 0;
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    max-width: 500px;
 }
 
 #forwardButton {
-    width: 33%;
-    height: 30px;
+    width: 100%;
 }
 
 #backButton {
-    width: 33%;
-    height: 30px;
+    width: 100%;
 }
 
 #resetButton {
-    width: 33%;
-    height: 30px;
+    width: 100%;
 }
 
-@media only screen and (max-width: 768px) {
-    #areaCanvas {
-        margin-top: 0px;
+.buttons {
+  appearance: none;
+  background-color: #000000;
+  border: 2px solid #1A1A1A;
+  border-radius: 15px;
+  box-sizing: border-box;
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+  margin-bottom: 10px;
+  min-height: 60px;
+  min-width: 0;
+  outline: none;
+  padding: 16px 24px;
+  text-align: center;
+  text-decoration: none;
+  transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
+  user-select: none;
+  touch-action: manipulation;
+  width: 100%;
+}
+
+.buttons:disabled {
+  pointer-events: none;
+  background-color: #888888;
+}
+
+.buttons:hover {
+  box-shadow: rgba(0, 0, 0, 0.25) 0 8px 15px;
+  transform: translateY(-2px);
+}
+
+.buttons:active {
+  box-shadow: none;
+  transform: translateY(0);
+}
+
+@media only screen and (min-width: 1200px) {
+    .container {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+@media only screen and (max-width: 1200px) {
+    .container {
+        flex-direction: column;
+
+    }
+
+    .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .buttons {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    #forwardButton {
+        width: 100%;
+        height: 30px;
+    }
+    
+    #backButton {
+        width: 100%;
+        height: 30px;
+    }
+    
+    #resetButton {
+        width: 100%;
+        height: 30px;
     }
 }

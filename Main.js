@@ -2,7 +2,8 @@ import { objectManagement } from './animationTools.js';
 import { projection } from './cubeTools.js';
 
 //! DO NEXT
-//TODO: Make the end state of each animation part and link it to the back button.
+//TODO: Make a sign that shows in what part of the animation you are in.
+//TODO: Make the site look better and more responsive.
 
 let areaCanvas = document.getElementById('areaCanvas');
 let areaCanvasCtx = areaCanvas.getContext('2d');
@@ -21,7 +22,6 @@ let canvasSquareWidth = areaCanvas.width - squareSize;
 let canvasSquareHeight = areaCanvas.height - squareSize;
 
 let unitSquare = objectManager.createObject((canvasSquareWidth) / 2, (canvasSquareHeight) / 2, squareSize, 'rgb(255, 0, 0)', true);
-let unitCentimeter = objectManager.createObject(startX + 0 * squareSize, startY + 0 * squareSize, squareSize - 1, 'rgb(255, 0, 0)', true);
 let bracketObject = objectManager.createBracket((canvasSquareWidth) / 2 - 10, (canvasSquareHeight) / 2, squareSize);
 
 const cubeVertices = [
@@ -64,15 +64,23 @@ const changeLocationVertices1 = [
     {x: -5.2, y: -4.2, z: -4.2}  // Vertex 7
 ];
 
+let case2EndState =[];
+let case3EndState =[];
+let case6EndState =[];
+let case8EndState =[];
+let case9EndState =[];
+
 let centimeterCube = projector.createCubeObject(cubeVertices, cubeEdges);
 let meterCube = projector.createCubeObject(cubeVertices2, cubeEdges);
 
-
+// Waits for the window to load before drawing the starting state
 window.onload = function() {
     objectManager.drawObject(unitSquare);
     objectManager.drawObject(bracketObject);
     objectManager.updateObject(bracketObject, {x: (canvasSquareWidth) / 2, y: (canvasSquareHeight) / 2 - 10, horizontal: true})
     objectManager.drawObject(bracketObject);
+
+    document.getElementById('backButton').disabled = true;
 
     if ('fonts' in document) {
         document.fonts.load('20px Inter').then(function () {            
@@ -84,51 +92,78 @@ window.onload = function() {
     }
 }
 
-let numberOfClicks = 5;
+let numberOfClicks = 0;
 let isAnimating = false;
+// Waits for the DOM to load before adding event listeners
 document.addEventListener('DOMContentLoaded', (event) => {
     let forwardButton = document.getElementById('forwardButton');
     let backButton = document.getElementById('backButton');
     let resetButton = document.getElementById('resetButton');
 
+    // Canvas click event listener
     areaCanvas.addEventListener('click', () => {
-        if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus()) {
+        if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus() && numberOfClicks < 12) {
             isAnimating = true;
-            animationIndicatorOn();
+            
             main(numberOfClicks).then(() => {
                 numberOfClicks++;
+
+                backButton.disabled = false;
+                if(numberOfClicks >= 12) {
+                    forwardButton.disabled = true;
+                }
+
                 isAnimating = false;
-                animationIndicatorOff();
             });
         }
     });
 
+    // Forward button click event listener
     forwardButton.addEventListener('click', () => {
-        if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus()) {
+        if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus() && numberOfClicks < 12) {
             isAnimating = true;
+
             main(numberOfClicks).then(() => {
-                numberOfClicks++;
+                numberOfClicks++;    
+
+                backButton.disabled = false;
+                if(numberOfClicks >= 12) {
+                    forwardButton.disabled = true;
+                }
+
                 isAnimating = false;
             });
         }
     });
 
+    // Back button click event listener
     backButton.addEventListener('click', () => {
         if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus()) {
             if(numberOfClicks > 0) {
-                numberOfClicks--;
                 isAnimating = true;
-                main(numberOfClicks).then(() => {
+                numberOfClicks--;
+                
+                forwardButton.disabled = false;
+                if(numberOfClicks <= 0) {
+                    backButton.disabled = true;
+                }
+                
+                animationEndStates(numberOfClicks).then(() => {
                     isAnimating = false;
                 });
             }
         }
     });
 
+    // Reset button click event listener
     resetButton.addEventListener('click', () => {
         if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus()) {
             numberOfClicks = 0;
+            backButton.disabled = true;
+            forwardButton.disabled = false;
+            
             isAnimating = true;
+            
             animationEndStates(numberOfClicks).then(() => {
                 isAnimating = false;
             });
@@ -136,12 +171,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
     });
 });
 
+// Function that handels advancing the animation
 function main(numberOfClicks) {
     return new Promise((resolve) => {
         switch (numberOfClicks) {
             case 0:
-                // Starting square and 10cnm grid
                 startAnimationSequence([
+                    // Starting square and 10cnm grid
                     () => objectManager.animate(unitSquare, {x: startX + 0 * squareSize + 1, y: startY + 0 * squareSize + 1.5}, 1000, false),
                     () => new Promise(resolve => setTimeout(resolve, 1050)),
                     () => drawGridScale(),
@@ -149,21 +185,20 @@ function main(numberOfClicks) {
                 ]).then(resolve);
                 break;
             case 1:
-                // Expanding square to 10cm and rendering 10cm cube with scale
                 startAnimationSequence([
+                    // Expanding square to 10cm and rendering 10cm cube with scale
                     () => objectManager.animate(unitSquare, {size: 10 * squareSize, color: 'rgb(0, 150, 255)'}, 1000, true),
-                    () => objectManager.removeObject(unitCentimeter),
                     () => new Promise(resolve => setTimeout(resolve, 1200)),
                     () => projector.renderCube(centimeterCube),
                     () => drawGridScale(),
                 ]).then(resolve);
                 break;
             case 2:
-                // Rotating to first show the right side and then the top of the 10cm cube
                 startAnimationSequence([
                     // Rotating to show the right side of the cube
                     () => projector.animateCube(centimeterCube, {type: 'rotateX', angle: 0.01} , 1900),
                     () => new Promise(resolve => setTimeout(resolve, 2050)),
+                    () => case2EndState = centimeterCube.vertices,
                     () => drawGridScale(),
                 ]).then(resolve);
                 break;
@@ -172,6 +207,7 @@ function main(numberOfClicks) {
                     // Rotating to show the top of the cube
                     () => projector.animateCube(centimeterCube, {type: 'rotateY', angle: 0.0094} , 2000),
                     () => new Promise(resolve => setTimeout(resolve, 2050)),
+                    () => case3EndState = centimeterCube.vertices,
                     () => drawGridScale(),
                 ]).then(resolve);
                 break;
@@ -188,8 +224,8 @@ function main(numberOfClicks) {
                 ]).then(resolve);
                 break;
             case 5:
-                // Increasing the distance between the cube and the camera and changing the cube's location
                 startAnimationSequence([
+                    // Increasing the distance between the cube and the camera and changing the cube's location
                     () => projector.animateCube(centimeterCube, {type: 'vertices', fov: 1000, viewDistance: 20, vertices: changeLocationVertices1}, 1000),
                 ]).then(resolve);
                 break;
@@ -229,30 +265,45 @@ function main(numberOfClicks) {
                 break;
             case 8:
                 startAnimationSequence([
+                    // Rotating the meter cube to show the right side
                     () => projector.animateCube(meterCube, {type: 'rotateX', angle: 0.01} , 1900),
                     () => new Promise(resolve => setTimeout(resolve, 2050)),
+                    () => case8EndState = meterCube.vertices,
                     () => drawMeterScale(),
                 ]).then(resolve);
                 break;
             case 9:
                 startAnimationSequence([
+                    // Rotating the meter cube to show the top
                     () => projector.animateCube(meterCube, {type: 'rotateY', angle: 0.0094} , 2000),
                     () => new Promise(resolve => setTimeout(resolve, 2100)),
+                    () => case9EndState = meterCube.vertices,
                     () => drawMeterScale(),
                 ]).then(resolve);
                 break;
             case 10:
                 startAnimationSequence([
+                    // Resetting the meter cube to the front face
                     () => projector.animateCube(meterCube, {type: 'rotateX', angle: -0.0095} , 2000),
                     () => new Promise(resolve => setTimeout(resolve, 2100)),
                     () => projector.updateCube(meterCube, {vertices: cubeVertices2.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                 ]).then(resolve);
                 break;
+            case 11:
+                startAnimationSequence([
+                    // Rotating the meter cube to show the right side and the top
+                    () => projector.animateCube(meterCube, {type: 'rotateX', angle: 0.0045}, 2000),
+                    () => new Promise(resolve => setTimeout(resolve, 2100)),
+                    () => projector.animateCube(meterCube, {type: 'rotateY', angle: 0.0045}, 2000),
+                    () => new Promise(resolve => setTimeout(resolve, 2100)),
+                ]).then(resolve);
+                break;
+            
         }
     });
-
 }
 
+// Function that handels reversing the animation
 function animationEndStates() {
     return new Promise((resolve) => {
         switch (numberOfClicks) {
@@ -276,23 +327,129 @@ function animationEndStates() {
                     () => projector.viewDistance = 3,
                     () => projector.updateCube(centimeterCube, {vertices: cubeVertices.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                     () => projector.updateCubeFaces(centimeterCube),
-                    () => projector.gap = 0.15,
+                    () => projector.gap = 0.07,
                     () => projector.updateCube(meterCube, {vertices: cubeVertices2.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                     () => projector.updateCubeFaces(meterCube),
 
                 ]).then(resolve);
                 break;
             case 1:
+                // End state for the 1cm cube and wireframe grid
+                startAnimationSequence([
+                    () => areaCanvasCtx.clearRect(0, 0, areaCanvas.width, areaCanvas.height),
+                    () => objectManager.updateObject(unitSquare, {x: startX + 0 * squareSize + 1, y: startY + 0 * squareSize + 1.5, size: squareSize, color: 'rgb(255, 0, 0)'}, 1000, false),
+                    () => objectManager.drawObject(unitSquare),
+                    () => objectManager.drawGrid(),
+                    () => drawGridScale(),
+                ]).then(resolve);
+                break;
+            case 2:
+                // End state for the 10cm plane getting transformed to a cube
+                startAnimationSequence([
+                    () => areaCanvasCtx.clearRect(0, 0, areaCanvas.width, areaCanvas.height),
+                    () => projector.updateCube(centimeterCube, {vertices: cubeVertices.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.updateCubeFaces(centimeterCube),
+                    () => projector.renderCube(centimeterCube),
+                    () => drawGridScale(),
+                ]).then(resolve);
+                break;
+            case 3:
+                // End state for the 10cm cube rotating to show the right side
+                startAnimationSequence([
+                    () => areaCanvasCtx.clearRect(0, 0, areaCanvas.width, areaCanvas.height),
+                    () => projector.updateCube(centimeterCube, {vertices: case2EndState}),
+                    () => projector.updateCubeFaces(centimeterCube),
+                    () => projector.renderCube(centimeterCube),
+                    () => drawGridScale(),
+                ]).then(resolve);
+                break;
+            case 4:
+                // End state for the 10cm cube rotating to show the top
+                startAnimationSequence([
+                    () => areaCanvasCtx.clearRect(0, 0, areaCanvas.width, areaCanvas.height),
+                    () => projector.updateCube(centimeterCube, {vertices: case3EndState}),
+                    () => projector.updateCubeFaces(centimeterCube),
+                    () => projector.renderCube(centimeterCube),
+                    () => drawGridScale(),
+                ]).then(resolve);
+                break;
+            case 5:
+                // End state for resetting the 10cm cube to show the front face
+                startAnimationSequence([
+                    () => projector.viewDistance = 3,
+                    () => projector.fov = 700,
+                    () => projector.updateCube(centimeterCube, {vertices: cubeVertices.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.updateCubeFaces(centimeterCube),
+                    () => projector.renderCube(centimeterCube),
+                ]).then(resolve);
+                break;
+            case 6:
+                // End state for the 10cm cube moving away from the camera
+                startAnimationSequence([
+                    () => projector.viewDistance = 20,
+                    () => projector.fov = 1000,
+                    () => projector.gap = 0.07,
+                    () => projector.updateCube(centimeterCube, {vertices: changeLocationVertices1.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.updateCubeFaces(centimeterCube),
+                    () => projector.renderCube(centimeterCube),
+                ]).then(resolve);
+                break;
+            case 7:
+                // End state for rotating the cube grid to show the right side and the top of the grid
+                startAnimationSequence([
+                    //TODO: quite obvious what needs to be done here
+                ]).then(resolve);
+                break;
+            case 8:
+                // End state for the cube grid getting transformed to the meter cube
+                startAnimationSequence([
+                    () => projector.fov = 750,
+                    () => projector.viewDistance = 3,
+                    () => projector.updateCube(meterCube, {vertices: cubeVertices2.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.updateCubeFaces(meterCube),
+                    () => projector.renderCube(meterCube),
+                    () => drawMeterScale(),
+                ]).then(resolve);
+                break;
+            case 9:
+                // End state for the meter cube rotating to show the right side
+                startAnimationSequence([
+                    () => projector.updateCube(meterCube, {vertices: case8EndState.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.updateCubeFaces(meterCube),
+                    () => projector.renderCube(meterCube),
+                    () => drawMeterScale(),
+                ]).then(resolve);
+                break;
+            case 10:
+                // End state for the meter cube rotating to show the top
+                startAnimationSequence([
+                    () => projector.updateCube(meterCube, {vertices: case9EndState.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.updateCubeFaces(meterCube),
+                    () => projector.renderCube(meterCube),
+                    () => drawMeterScale(),
+                ]).then(resolve);
+                break;
+            case 11:
+                // End state for the meter cube resetting to show the front face
+                startAnimationSequence([
+                    () => projector.updateCube(meterCube, {vertices: cubeVertices2.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.updateCubeFaces(meterCube),
+                    () => projector.renderCube(meterCube),
+                ]).then(resolve);
+                break;
+            
         }
     });
 }
 
+// Function that ensures that the animations are played in sequence using promises
 function startAnimationSequence(animations) {
     return animations.reduce((promise, animation) => {
         return promise.then(animation);
     }, Promise.resolve());
 }
 
+// Draws a scale for the 10cm grid and cube
 function drawGridScale() {
     objectManager.updateObject(bracketObject, {x: startX, y: startY - 10, size: 10 * squareSize, horizontal: true})
     objectManager.drawObject(bracketObject);
@@ -306,6 +463,7 @@ function drawGridScale() {
     areaCanvasCtx.fillText('10cm', startX - 80, startY + (10 * squareSize / 2));
 }
 
+// Draws a scale for the 1m cube
 function drawMeterScale() {
     objectManager.updateObject(bracketObject, {x: startX, y: startY - 10, size: 10 * squareSize, horizontal: true})
     objectManager.drawObject(bracketObject);
@@ -317,18 +475,4 @@ function drawMeterScale() {
 
     areaCanvasCtx.fillText('1m', startX + 11 - (squareSize / 2) + (10 * squareSize / 2), startY - 30);
     areaCanvasCtx.fillText('1m', startX - 80, startY + (10 * squareSize / 2));
-}
-
-function animationIndicatorOn() {
-    let indicator = document.getElementById('animationIndicator');
-    indicator.style.color = 'green';
-
-    indicator.innerHTML = 'Animoi';
-}
-
-function animationIndicatorOff() {
-    let indicator = document.getElementById('animationIndicator');
-    indicator.style.color = 'red';
-
-    indicator.innerHTML = 'Ei animoi';
 }

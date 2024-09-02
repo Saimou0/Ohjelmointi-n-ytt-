@@ -25,6 +25,7 @@ export class projection {
         return {vertices, edges, faces};
     }
 
+    // Creates the faces of a cube object
     createCubeFaces(vertices) {
         return [
             { vertices: [vertices[0], vertices[1], vertices[2], vertices[3]], color: 'rgb(0, 150, 255)' }, // Front face
@@ -36,19 +37,19 @@ export class projection {
         ];
     }
 
-    // Updating a cube object
+    // Updates a cube object
     updateCube(cube, changes) {
         Object.assign(cube, changes);
     }
 
-    // Updates the cube faces
+    // Updates the cube object faces
     updateCubeFaces(cube) {
         const updatedFaces = this.createCubeFaces(cube.vertices);
         cube.faces = updatedFaces;
         return cube;
     }
 
-    // Drawing a cube object
+    // Translates 3D vertices to 2D vertices
     projectVertices(vertex) {
         return {
             x: (vertex.x * this.fov) / (vertex.z + this.viewDistance),
@@ -56,6 +57,7 @@ export class projection {
         };
     }
 
+    // Draws a cube object
     renderCube(cube) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
@@ -100,7 +102,7 @@ export class projection {
     }
 
     // Animating a cube object
-    // Rotating a cube around the x-axis
+    // Rotates a cube object around the x-axis
     rotateXAxis(cube, theta) {
         const cos = Math.cos(theta);
         const sin = Math.sin(theta);
@@ -113,7 +115,7 @@ export class projection {
 
     }
 
-    // Rotating a cube around the y-axis
+    // Rotates a cube object around the y-axis
     rotateYAxis(cube, theta) {
         const cos = Math.cos(theta);
         const sin = Math.sin(theta);
@@ -125,16 +127,17 @@ export class projection {
         }));
     }
 
-    // Increasing the field of view
+    // Increases the field of view
     changeFov(value, progress) {
         this.fov = this.originalFov + (value - this.originalFov) * progress;
     }
 
-    // Increasing the view distance
+    // Increases the view distance
     changeViewDistance(value, progress) {
         this.viewDistance = this.originalViewDistance + (value - this.originalViewDistance) * progress;
     }
 
+    // Animates a cube object with the given changes and duration
     animateCube(cube, changes, duration) {
         const fixedTimeStamp = 6.06;
         let accumulatedTime = 0;
@@ -221,6 +224,7 @@ export class projection {
         requestAnimationFrame(frame);
     }
 
+    // Fills an array with cube objects
     createCubeGrid(cube) {
         let cubeList = [];
         let cubeSize = 1;
@@ -246,12 +250,12 @@ export class projection {
         this.cubes = cubeList;
     }
 
-    // Calculate the depth of a face
+    // Calculates the depth of a face
     calculateFaceDepth(face) {
         return face.vertices.reduce((sum, vertex) => sum + vertex.z, 0) / face.vertices.length;
     }
 
-    // Collect all the faces of every cube in the grid and return a list of all of them
+    // Collects all the faces of every cube in the grid and return a list of all of them
     collectAllFaces() {
         let allFaces = [];
         this.cubes.forEach(cube => {
@@ -263,12 +267,12 @@ export class projection {
         return allFaces;
     }
 
-    // Sort all the faces in the grid by depth
+    // Sorts all the faces in the grid by depth
     sortFacesByDepth(faces) {
         return faces.sort((a, b) => b.depth - a.depth);
     }
 
-    // Render all the sorted faces
+    // Renders all the sorted faces
     renderSortedFaces(faces) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
@@ -291,6 +295,7 @@ export class projection {
         this.ctx.translate(-this.canvas.width / 2, -this.canvas.height / 2);
     }
 
+    // Creates a copy of the cube grid
     createGridCopy() {
         this.gridCopy = this.cubes.map(cube => ({
             vertices: cube.vertices.map(vertex => ({ ...vertex })),
@@ -299,6 +304,7 @@ export class projection {
         }));
     }
 
+    // Decreses the gap between the cubes in the grid
     decreaseGap() {
         const frame = () => {
             this.gap -= 0.005;
@@ -318,7 +324,7 @@ export class projection {
         requestAnimationFrame(frame);
     }
 
-    // Rotating the cube grid
+    // Calculates the center of the cube grid
     calculateGridCenter() {
         let totalVertices = 0;
         let center = { x: 0, y: 0, z: 0 };
@@ -340,6 +346,7 @@ export class projection {
         return center;
     }
 
+    // Rotates the cube grid around the desired axis
     rotateCubeGrid(wantedAngle, duration, axis) {
         const fixedTimeStamp = 6.06;
         let accumulatedTime = 0;
@@ -382,8 +389,6 @@ export class projection {
                 let allFaces = this.collectAllFaces();
                 let sortedFaces = this.sortFacesByDepth(allFaces);
                 this.renderSortedFaces(sortedFaces);
-
-                console.log("DT: " + deltaTime + this.isAnimating); 
     
                 if(progress >= 1) {
                     this.isAnimating = false;
@@ -399,6 +404,7 @@ export class projection {
         requestAnimationFrame(frame);
     }
 
+    // Returns the correct rotation matrix based on the wanted rotation axis
     getRotationMatrix(angle, axis) {
         switch (axis) {
             case 'x':
@@ -413,6 +419,7 @@ export class projection {
     }
 
     // Matrices for rotating the cube grid
+    // Returns a new vector after applying a matrix transformation
     transformVector(matrix, vector) {
         const [x, y, z] = vector;
 
@@ -423,6 +430,7 @@ export class projection {
         ];
     }
 
+    // Returns a x-axis rotation matrix
     rotationMatrixX(angle) {
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
@@ -434,6 +442,7 @@ export class projection {
         ];
     }
 
+    // Returns a y-axis rotation matrix
     rotationMatrixY(angle) {
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
@@ -445,6 +454,7 @@ export class projection {
         ];
     }
 
+    // Returns a z-axis rotation matrix
     rotationMatrixZ(angle) {
         const cos = Math.cos(angle);
         const sin = Math.sin(angle);
@@ -456,12 +466,14 @@ export class projection {
         ];
     }
 
+    // Draws the cube grid
     drawCubeGrid() {
         let allFaces = this.collectAllFaces();
         let sortedFaces = this.sortFacesByDepth(allFaces);
         this.renderSortedFaces(sortedFaces);
     }
 
+    // Returns the current animation status
     checkAnimationStatus() {
         return this.isAnimating;
     }

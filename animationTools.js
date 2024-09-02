@@ -5,8 +5,6 @@ export class objectManagement {
         
         this.isAnimating = false;
         
-        this.objects = [];
-
         this.squareSize = 70;
         this.numSquares = 10;
         this.totalSize = this.numSquares * this.squareSize;
@@ -16,12 +14,6 @@ export class objectManagement {
 
         this.startX = (areaCanvas.width - this.totalSize) / 2;
         this.startY = (areaCanvas.height - this.totalSize) / 2;
-    }
-
-    //TODO: Optimize the hell out of this class
-
-    setObjects(objectList) {
-        this.objects = objectList;
     }
 
     // Creates an object with x and y coordinates, size and color
@@ -58,14 +50,7 @@ export class objectManagement {
         }
     }
 
-    removeObject(objectToRemove) {
-        this.objects = this.objects.filter(object => object !== objectToRemove);
-    
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    
-        this.objects.forEach(object => this.drawObject(object));
-    }
-
+    // Converts an rgb string to an object with r, g and b properties
     rgbToObject(rgb) {
         let match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
         if (match) {
@@ -128,10 +113,12 @@ export class objectManagement {
 
     }
 
+    // Returns the status of the animation
     checkAnimationStatus() {
         return this.isAnimating;
     }
 
+    // Draws a bracket on the canvas at the given coordinates
     drawBracket(x, y, size, horizontal) {
         if(!horizontal) {
             this.ctx.beginPath();
@@ -152,6 +139,7 @@ export class objectManagement {
         }
     }
 
+    // Draws text on the canvas at the given coordinates
     drawText(x, y, text, font) {
         this.ctx.font = font;
         this.ctx.fillText(text, x, y);
@@ -185,6 +173,7 @@ export class objectManagement {
         }
     }
 
+    // Draws a grid on the canvas
     drawGrid() {
         let startX = (this.canvas.width - (10*70)) / 2;
         let startY = (this.canvas.height - (10*70)) / 2;
@@ -199,6 +188,7 @@ export class objectManagement {
         }
     }
 
+    // Draw a square object on the canvas
     drawSquare(object) {
         if(object.border == true) {
             this.ctx.strokeStyle = 'black';
