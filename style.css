@@ -77,7 +77,6 @@ body, html {
   text-decoration: none;
   transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
   user-select: none;
-  touch-action: manipulation;
   width: 100%;
 }
 
@@ -94,6 +93,15 @@ body, html {
 .buttons:active {
   box-shadow: none;
   transform: translateY(0);
+}
+
+#slideIndicator {
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 400;
+    margin: 0.5rem;
+    margin-top: 0;
+    user-select: none;
 }
 
 @media only screen and (min-width: 1200px) {

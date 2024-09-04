@@ -154,23 +154,26 @@ export class objectManagement {
 
     // Animates a grid by drawing each square one by one
     animateGrid() {
-        if(this.currentRow >= this.numSquares) {
-            return;
+        const frame = () => {
+            this.drawSquareAt(this.currentCol, this.currentRow);
+            this.currentCol++;
+            
+            if (this.currentCol >= this.numSquares) {
+                this.currentCol = 0;
+                this.currentRow++;
+            }
+
+            if (this.currentRow < this.numSquares) {
+                requestAnimationFrame(frame);
+            } else {
+                this.currentCol = 0;
+                this.currentRow = 0;
+                this.isAnimating = false;
+            }
         }
+
         this.isAnimating = true;
-        this.drawSquareAt(this.currentCol, this.currentRow);
-        this.currentCol++;
-        if (this.currentCol >= this.numSquares) {
-            this.currentCol = 0;
-            this.currentRow++;
-        }
-        if (this.currentRow < this.numSquares) {
-            setTimeout(() => requestAnimationFrame(this.animateGrid.bind(this)), 10);
-        } else {
-            this.isAnimating = false;
-            this.currentCol = 0;
-            this.currentRow = 0;
-        }
+        requestAnimationFrame(frame);
     }
 
     // Draws a grid on the canvas

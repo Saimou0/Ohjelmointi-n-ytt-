@@ -312,9 +312,7 @@ export class projection {
             this.cubes.splice(0, this.cubes.length);
             this.createCubeGrid(this.gridCopy[0]);
 
-            let allFaces = this.collectAllFaces();
-            let sortedFaces = this.sortFacesByDepth(allFaces);
-            this.renderSortedFaces(sortedFaces);
+            this.drawCubeGrid();
 
             if(this.gap >= 0.005) {
                 requestAnimationFrame(frame);
@@ -354,8 +352,7 @@ export class projection {
         let progress = 0;
 
         const gridCenter = this.calculateGridCenter();
-        const angle = wantedAngle;
-        const rotationMatrix = this.getRotationMatrix(angle, axis);
+        const rotationMatrix = this.getRotationMatrix(wantedAngle, axis);
 
         const frame = () => {
             const currentTime = performance.now();
@@ -386,9 +383,7 @@ export class projection {
                 });
                 
                 // Render the cubes
-                let allFaces = this.collectAllFaces();
-                let sortedFaces = this.sortFacesByDepth(allFaces);
-                this.renderSortedFaces(sortedFaces);
+                this.drawCubeGrid();
     
                 if(progress >= 1) {
                     this.isAnimating = false;
@@ -402,6 +397,30 @@ export class projection {
         };
         this.isAnimating = true;
         requestAnimationFrame(frame);
+    }
+
+    // Applies a rotation to the cube grid instantly
+    applyInstantRotation(wantedAngle, axis) {
+        const rotationMatrix = this.getRotationMatrix(wantedAngle, axis);
+        const gridCenter = this.calculateGridCenter();
+
+        this.cubes.forEach(cube => {
+            cube.vertices.forEach(vertex => {
+                const translatedVertex = [
+                    vertex.x - gridCenter.x,
+                    vertex.y - gridCenter.y,
+                    vertex.z - gridCenter.z,
+                    1
+                ];
+
+                const rotatedVertex = this.transformVector(rotationMatrix, translatedVertex);
+
+                vertex.x = rotatedVertex[0] + gridCenter.x;
+                vertex.y = rotatedVertex[1] + gridCenter.y;
+                vertex.z = rotatedVertex[2] + gridCenter.z;
+            });
+        });
+
     }
 
     // Returns the correct rotation matrix based on the wanted rotation axis

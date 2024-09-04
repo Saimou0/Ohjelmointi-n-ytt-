@@ -102,13 +102,26 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     // Canvas click event listener
     areaCanvas.addEventListener('click', () => {
+        // Every button checks if there is an animation playing
         if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus() && numberOfClicks < 12) {
             isAnimating = true;
             
+            // When advancing the animation all buttons are disabled
+            forwardButton.disabled = true;
+            backButton.disabled = true;
+            resetButton.disabled = true;
+
+            // Main function is called, using a promise to wait for the animation to finish
             main(numberOfClicks).then(() => {
                 numberOfClicks++;
+                updateSlideIndicator();
 
                 backButton.disabled = false;
+                
+                forwardButton.disabled = false;
+                backButton.disabled = false;
+                resetButton.disabled = false;
+      
                 if(numberOfClicks >= 12) {
                     forwardButton.disabled = true;
                 }
@@ -122,11 +135,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
     forwardButton.addEventListener('click', () => {
         if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus() && numberOfClicks < 12) {
             isAnimating = true;
+            forwardButton.disabled = true;
+            backButton.disabled = true;
+            resetButton.disabled = true;
 
             main(numberOfClicks).then(() => {
-                numberOfClicks++;    
+                numberOfClicks++;
+                updateSlideIndicator();
 
                 backButton.disabled = false;
+
+                forwardButton.disabled = false;
+                backButton.disabled = false;
+                resetButton.disabled = false;
+
                 if(numberOfClicks >= 12) {
                     forwardButton.disabled = true;
                 }
@@ -142,12 +164,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
             if(numberOfClicks > 0) {
                 isAnimating = true;
                 numberOfClicks--;
+                updateSlideIndicator();
                 
                 forwardButton.disabled = false;
                 if(numberOfClicks <= 0) {
                     backButton.disabled = true;
                 }
                 
+                // AnimationEndStates is called with a promise to wait for the changes to the objects to finish
                 animationEndStates(numberOfClicks).then(() => {
                     isAnimating = false;
                 });
@@ -159,6 +183,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     resetButton.addEventListener('click', () => {
         if(!isAnimating && !objectManager.checkAnimationStatus() && !projector.checkAnimationStatus()) {
             numberOfClicks = 0;
+            updateSlideIndicator();
             backButton.disabled = true;
             forwardButton.disabled = false;
             
@@ -177,11 +202,13 @@ function main(numberOfClicks) {
         switch (numberOfClicks) {
             case 0:
                 startAnimationSequence([
-                    // Starting square and 10cnm grid
+                    // Starting square and 10cm grid
                     () => objectManager.animate(unitSquare, {x: startX + 0 * squareSize + 1, y: startY + 0 * squareSize + 1.5}, 1000, false),
+                    // Waiting for the animation to finish before moving to the next task 
                     () => new Promise(resolve => setTimeout(resolve, 1050)),
                     () => drawGridScale(),
-                    () => objectManager.animateGrid()
+                    () => objectManager.animateGrid(),
+                    () => new Promise(resolve => setTimeout(resolve, 1600)),
                 ]).then(resolve);
                 break;
             case 1:
@@ -221,12 +248,14 @@ function main(numberOfClicks) {
                     () => projector.updateCube(centimeterCube, {vertices: cubeVertices.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                     () => projector.updateCubeFaces(centimeterCube),
                     () => projector.renderCube(centimeterCube),
+                    () => drawGridScale(),
                 ]).then(resolve);
                 break;
             case 5:
                 startAnimationSequence([
                     // Increasing the distance between the cube and the camera and changing the cube's location
                     () => projector.animateCube(centimeterCube, {type: 'vertices', fov: 1000, viewDistance: 20, vertices: changeLocationVertices1}, 1000),
+                    () => new Promise(resolve => setTimeout(resolve, 1050)),
                 ]).then(resolve);
                 break;
             case 6:
@@ -287,6 +316,7 @@ function main(numberOfClicks) {
                     () => projector.animateCube(meterCube, {type: 'rotateX', angle: -0.0095} , 2000),
                     () => new Promise(resolve => setTimeout(resolve, 2100)),
                     () => projector.updateCube(meterCube, {vertices: cubeVertices2.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => drawMeterScale(),
                 ]).then(resolve);
                 break;
             case 11:
@@ -397,7 +427,14 @@ function animationEndStates() {
             case 7:
                 // End state for rotating the cube grid to show the right side and the top of the grid
                 startAnimationSequence([
-                    //TODO: quite obvious what needs to be done here
+                    () => projector.viewDistance = 20,
+                    () => projector.fov = 1000,
+                    () => projector.gap = 0.07,
+                    () => projector.updateCube(centimeterCube, {vertices: changeLocationVertices1.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
+                    () => projector.createCubeGrid(centimeterCube),
+                    () => projector.applyInstantRotation(0.77, "x"),
+                    () => projector.applyInstantRotation(-0.77, "y"),
+                    () => projector.drawCubeGrid(),
                 ]).then(resolve);
                 break;
             case 8:
@@ -475,4 +512,8 @@ function drawMeterScale() {
 
     areaCanvasCtx.fillText('1m', startX + 11 - (squareSize / 2) + (10 * squareSize / 2), startY - 30);
     areaCanvasCtx.fillText('1m', startX - 80, startY + (10 * squareSize / 2));
+}
+
+function updateSlideIndicator() {
+    document.getElementById('slideIndicator').innerHTML = `${numberOfClicks} / 12`;
 }
