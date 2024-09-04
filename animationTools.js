@@ -5,10 +5,6 @@ export class objectManagement {
         
         this.isAnimating = false;
         
-        this.animationQueue = [];
-        this.objects = [];
-
-        
         this.squareSize = 70;
         this.numSquares = 10;
         this.totalSize = this.numSquares * this.squareSize;
@@ -20,66 +16,52 @@ export class objectManagement {
         this.startY = (areaCanvas.height - this.totalSize) / 2;
     }
 
-    setObjects(objectList) {
-        this.objects = objectList;
-    }
-
     // Creates an object with x and y coordinates, size and color
     createObject(x, y, size, color, border) {
         return {x, y, size, color, border, type: 'square'}
     }
-
     createBracket(x, y, size, horizontal) {
         return {x, y, size, horizontal, type: 'bracket'}
     }
-
     createText(x, y, text, font = '20px Inter') {
         return {x, y, text, font, type: 'text'}
     }
 
-    
+    // Updates the object with the desired changes
+    updateObject(object, changes) {
+        Object.assign(object, changes);
+    }
+
     // Draws the object on the canvas
     drawObject(object) {
         switch(object.type) {
             case 'bracket':
                 this.drawBracket(object.x, object.y, object.size, object.horizontal);
-                console.log('drawing bracket');
+                // console.log('drawing bracket');
                 break;
             case 'text':
                 this.drawText(object.x, object.y, object.text, object.font);
-                console.log('drawing text');
+                // console.log('drawing text');
                 break;
             case 'square':
                 this.drawSquare(object);
-                console.log('drawing square');
+                // console.log('drawing square');
                 break;
         }
     }
-    
-    // Updates the object with the desired changes
-    updateObject(object, changes) {
-        Object.assign(object, changes);
-    }
-    
-    addToTheQueue(object, changes, duration) {
-        this.animationQueue.push({
-            object: object,
-            changes: changes,
-            duration: duration
-        });
-    }
 
+    // Converts an rgb string to an object with r, g and b properties
     rgbToObject(rgb) {
         let match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
         if (match) {
-            return { r: match[1], g: match[2], b: match[3] };
+            return { r: parseInt(match[1], 10), g: parseInt(match[2], 10), b: parseInt(match[3], 10) };
         } else {
             throw new Error(`Invalid color format: ${rgb}. Expected format is 'rgb(r, g, b)'.`);
         }
     }
 
     // Animates the object to smoothly transition to the desired changes
-    animate(object, changes, duration) {
+    animate(object, changes, duration, shouldDrawGrid) {
         this.isAnimating = true;
         let startState = Object.assign({}, object);
         let startTime = Date.now();
@@ -90,20 +72,26 @@ export class objectManagement {
             let progress = Math.min(elapsedTime / duration, 1);
     
             for(let key in changes) {
-                let startValue = startState[key];
-                let endValue = changes[key];
-                // object[key] = startValue + (endValue - startValue) * progress;
-
                 if (key === 'color') {
-                    let startColor = this.rgbToObject(startValue);
-                    let endColor = this.rgbToObject(endValue);
-            
-                    let r = Math.floor(startColor.r + (endColor.r - startColor.r) * progress);
-                    let g = Math.floor(startColor.g + (endColor.g - startColor.g) * progress);
-                    let b = Math.floor(startColor.b + (endColor.b - startColor.b) * progress);
-            
+                    let startColor = this.rgbToObject(startState[key]);
+                    let endColor = this.rgbToObject(changes[key]);
+
+                    let rDiff = endColor.r - startColor.r;
+                    let gDiff = endColor.g - startColor.g;
+                    let bDiff = endColor.b - startColor.b;
+
+                    let r = Math.floor(startColor.r + rDiff * progress);
+                    let g = Math.floor(startColor.g + gDiff * progress);
+                    let b = Math.floor(startColor.b + bDiff * progress);
+
+                    r = Math.max(0, Math.min(255, r));
+                    g = Math.max(0, Math.min(255, g));
+                    b = Math.max(0, Math.min(255, b));
+
                     object[key] = `rgb(${r},${g},${b})`;
                 } else {
+                    let startValue = startState[key];
+                    let endValue = changes[key];
                     object[key] = startValue + (endValue - startValue) * progress;
                 }
             }
@@ -115,42 +103,22 @@ export class objectManagement {
             } else {
                 this.isAnimating = false;
             }
+
+            if(shouldDrawGrid) {
+                this.drawGrid();
+            }
         }
     
         frame();
 
     }
 
-    animateAll(sequence) {
-        this.animationQueue.forEach(animation => {
-            this.animate(animation.object, animation.changes, animation.duration);
-        });
-
-        this.animationQueue = [];
-
-        const drawFrame = () => {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-            this.objects.forEach(object => {
-                if(sequence == 2) {
-                    this.drawGrid();
-                }
-                this.drawObject(object);
-            });
-
-            
-            if(this.isAnimating && this.animationQueue.length == 0) {
-                requestAnimationFrame(drawFrame);
-            } 
-        }
-
-        drawFrame();
-    }
-
+    // Returns the status of the animation
     checkAnimationStatus() {
         return this.isAnimating;
     }
 
+    // Draws a bracket on the canvas at the given coordinates
     drawBracket(x, y, size, horizontal) {
         if(!horizontal) {
             this.ctx.beginPath();
@@ -171,11 +139,11 @@ export class objectManagement {
         }
     }
 
+    // Draws text on the canvas at the given coordinates
     drawText(x, y, text, font) {
         this.ctx.font = font;
         this.ctx.fillText(text, x, y);
     }
-
 
     // Draws a square at the given coordinates
     drawSquareAt(x, y) {
@@ -186,25 +154,33 @@ export class objectManagement {
 
     // Animates a grid by drawing each square one by one
     animateGrid() {
-        if(this.currentRow >= this.numSquares) {
-            return;
+        const frame = () => {
+            this.drawSquareAt(this.currentCol, this.currentRow);
+            this.currentCol++;
+            
+            if (this.currentCol >= this.numSquares) {
+                this.currentCol = 0;
+                this.currentRow++;
+            }
+
+            if (this.currentRow < this.numSquares) {
+                requestAnimationFrame(frame);
+            } else {
+                this.currentCol = 0;
+                this.currentRow = 0;
+                this.isAnimating = false;
+            }
         }
-        this.drawSquareAt(this.currentCol, this.currentRow);
-        this.currentCol++;
-        if (this.currentCol >= this.numSquares) {
-            this.currentCol = 0;
-            this.currentRow++;
-        }
-        if (this.currentRow < this.numSquares) {
-            setTimeout(() => requestAnimationFrame(this.animateGrid.bind(this)), 10);
-        }
+
+        this.isAnimating = true;
+        requestAnimationFrame(frame);
     }
 
+    // Draws a grid on the canvas
     drawGrid() {
         let startX = (this.canvas.width - (10*70)) / 2;
         let startY = (this.canvas.height - (10*70)) / 2;
         let squareSize = 70;
-
 
         for(let i = 0; i < 10; i++) {
             for(let j = 0; j < 10; j++) {
@@ -215,6 +191,7 @@ export class objectManagement {
         }
     }
 
+    // Draw a square object on the canvas
     drawSquare(object) {
         if(object.border == true) {
             this.ctx.strokeStyle = 'black';
