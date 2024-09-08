@@ -95,6 +95,15 @@ body, html {
   transform: translateY(0);
 }
 
+#descriptiveText {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 2.5rem;
+    margin-top: 0rem;
+    user-select: none;
+}
+
 #slideIndicator {
     text-align: center;
     font-size: 2rem;
@@ -104,17 +113,9 @@ body, html {
     user-select: none;
 }
 
-@media only screen and (min-width: 1200px) {
-    .container {
-        width: 100%;
-        height: 100%;
-    }
-}
-
 @media only screen and (max-width: 1200px) {
     .container {
         flex-direction: column;
-
     }
 
     .controls {
@@ -142,4 +143,47 @@ body, html {
         width: 100%;
         height: 30px;
     }
+
+    #descriptiveText{
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
 }
+
+@media only screen and (min-width: 1200px) {
+    .container {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+@media only screen and (max-width: 900px) {
+    #descriptiveText{
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+    #areaCanvas {
+        margin-top: 10rem;
+    }
+
+    #descriptiveText{
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+@media only screen and (min-width: 376px) {
+    #areaCanvas {
+        margin-top: 1rem;
+    }
+
+    #descriptiveText{
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+}
+
+

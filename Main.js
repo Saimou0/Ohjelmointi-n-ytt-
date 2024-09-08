@@ -1,5 +1,6 @@
 import { objectManagement } from './animationTools.js';
 import { projection } from './cubeTools.js';
+import { textManager } from './textManager.js';
 
 //! DO NEXT
 //TODO: Make a sign that shows in what part of the animation you are in.
@@ -11,7 +12,8 @@ areaCanvas.width = 900;
 areaCanvas.height = 900;
 
 const objectManager = new objectManagement(areaCanvasCtx, areaCanvas);
-let projector = new projection(areaCanvasCtx, areaCanvas);
+const projector = new projection(areaCanvasCtx, areaCanvas);
+const textManagement = new textManager();
 
 let squareSize = 70;
 
@@ -88,6 +90,8 @@ window.onload = function() {
             areaCanvasCtx.fillStyle = 'black';
             areaCanvasCtx.fillText('1cm', (canvasSquareWidth) / 2 - 75, (canvasSquareHeight) / 2 + 38);
             areaCanvasCtx.fillText('1cm', (canvasSquareWidth) / 2 + 15, (canvasSquareHeight) / 2 - 40);
+
+            textManagement.setTextToPage(1);
         });
     }
 }
@@ -203,12 +207,13 @@ function main(numberOfClicks) {
             case 0:
                 startAnimationSequence([
                     // Starting square and 10cm grid
+                    () => textManagement.setTextToPage(2),
                     () => objectManager.animate(unitSquare, {x: startX + 0 * squareSize + 1, y: startY + 0 * squareSize + 1.5}, 1000, false),
                     // Waiting for the animation to finish before moving to the next task 
                     () => new Promise(resolve => setTimeout(resolve, 1050)),
                     () => drawGridScale(),
                     () => objectManager.animateGrid(),
-                    () => new Promise(resolve => setTimeout(resolve, 1600)),
+                    // () => new Promise(resolve => setTimeout(resolve, 1600)),
                 ]).then(resolve);
                 break;
             case 1:
@@ -218,6 +223,7 @@ function main(numberOfClicks) {
                     () => new Promise(resolve => setTimeout(resolve, 1200)),
                     () => projector.renderCube(centimeterCube),
                     () => drawGridScale(),
+                    () => textManagement.setTextToPage(3),
                 ]).then(resolve);
                 break;
             case 2:
@@ -264,6 +270,7 @@ function main(numberOfClicks) {
                     () => projector.createCubeGrid(centimeterCube),
                     () => projector.createGridCopy(),
                     () => projector.drawCubeGrid(),
+                    () => textManagement.setTextToPage(4),
 
                     () => new Promise(resolve => setTimeout(resolve, 500)),
                     
@@ -340,6 +347,7 @@ function animationEndStates() {
             case 0:
                 // Reset button
                 startAnimationSequence([
+                    () => textManagement.setTextToPage(1),
                     () => areaCanvasCtx.clearRect(0, 0, areaCanvas.width, areaCanvas.height),
                     () => objectManager.updateObject(unitSquare, {x: (canvasSquareWidth) / 2, y: (canvasSquareHeight) / 2, color: 'rgb(255, 0, 0)', size: squareSize}, true),
                     () => objectManager.drawSquare(unitSquare),
@@ -370,6 +378,7 @@ function animationEndStates() {
                     () => objectManager.updateObject(unitSquare, {x: startX + 0 * squareSize + 1, y: startY + 0 * squareSize + 1.5, size: squareSize, color: 'rgb(255, 0, 0)'}, 1000, false),
                     () => objectManager.drawObject(unitSquare),
                     () => objectManager.drawGrid(),
+                    () => textManagement.setTextToPage(2),
                     () => drawGridScale(),
                 ]).then(resolve);
                 break;
@@ -422,6 +431,7 @@ function animationEndStates() {
                     () => projector.updateCube(centimeterCube, {vertices: changeLocationVertices1.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                     () => projector.updateCubeFaces(centimeterCube),
                     () => projector.renderCube(centimeterCube),
+                    () => textManagement.setTextToPage(3),
                 ]).then(resolve);
                 break;
             case 7:
@@ -435,6 +445,7 @@ function animationEndStates() {
                     () => projector.applyInstantRotation(0.77, "x"),
                     () => projector.applyInstantRotation(-0.77, "y"),
                     () => projector.drawCubeGrid(),
+                    () => textManagement.setTextToPage(4),
                 ]).then(resolve);
                 break;
             case 8:
