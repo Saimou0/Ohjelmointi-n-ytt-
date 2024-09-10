@@ -270,7 +270,9 @@ function main(numberOfClicks) {
                     () => projector.createCubeGrid(centimeterCube),
                     () => projector.createGridCopy(),
                     () => projector.drawCubeGrid(),
+
                     () => textManagement.setTextToPage(4),
+                    () => textManagement.setTextToSecondP(),
 
                     () => new Promise(resolve => setTimeout(resolve, 500)),
                     
@@ -348,6 +350,8 @@ function animationEndStates() {
                 // Reset button
                 startAnimationSequence([
                     () => textManagement.setTextToPage(1),
+                    () => document.getElementById('descriptiveText2').style.display = 'none',
+
                     () => areaCanvasCtx.clearRect(0, 0, areaCanvas.width, areaCanvas.height),
                     () => objectManager.updateObject(unitSquare, {x: (canvasSquareWidth) / 2, y: (canvasSquareHeight) / 2, color: 'rgb(255, 0, 0)', size: squareSize}, true),
                     () => objectManager.drawSquare(unitSquare),
@@ -428,10 +432,13 @@ function animationEndStates() {
                     () => projector.viewDistance = 20,
                     () => projector.fov = 1000,
                     () => projector.gap = 0.07,
+                    
                     () => projector.updateCube(centimeterCube, {vertices: changeLocationVertices1.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                     () => projector.updateCubeFaces(centimeterCube),
                     () => projector.renderCube(centimeterCube),
+                    
                     () => textManagement.setTextToPage(3),
+                    () => document.getElementById('descriptiveText2').style.display = 'none',
                 ]).then(resolve);
                 break;
             case 7:
@@ -440,11 +447,13 @@ function animationEndStates() {
                     () => projector.viewDistance = 20,
                     () => projector.fov = 1000,
                     () => projector.gap = 0.07,
+                    
                     () => projector.updateCube(centimeterCube, {vertices: changeLocationVertices1.map(vertex => ({x: vertex.x, y: vertex.y, z: vertex.z}))}),
                     () => projector.createCubeGrid(centimeterCube),
                     () => projector.applyInstantRotation(0.77, "x"),
                     () => projector.applyInstantRotation(-0.77, "y"),
                     () => projector.drawCubeGrid(),
+
                     () => textManagement.setTextToPage(4),
                 ]).then(resolve);
                 break;

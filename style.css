@@ -104,6 +104,15 @@ body, html {
     user-select: none;
 }
 
+#descriptiveText2 {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 400;
+    margin-bottom: 2.5rem;
+    margin-top: 0rem;
+    user-select: none;
+}
+
 #slideIndicator {
     text-align: center;
     font-size: 2rem;
@@ -148,6 +157,11 @@ body, html {
         font-size: 1.5rem;
         margin-bottom: 1rem;
     }
+
+    #descriptiveText2{
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
 }
 
 @media only screen and (min-width: 1200px) {
@@ -159,6 +173,11 @@ body, html {
 
 @media only screen and (max-width: 900px) {
     #descriptiveText{
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    #descriptiveText2{
         font-size: 1rem;
         margin-bottom: 1rem;
     }
@@ -181,6 +200,11 @@ body, html {
     }
 
     #descriptiveText{
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    #descriptiveText2{
         font-size: 1rem;
         margin-bottom: 1rem;
     }
